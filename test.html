@@ -63,30 +63,49 @@
             var proto_setPos = L.Marker.prototype._setPos;
             var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
             let polyline = null;
+            let arrow = null;
 
             function bearing(from, to) {
-
                 let [lat1, lon1] = from
                 let [lat2, lon2] = to
-
                 const radians = Math.PI / 180;
                 lat1 *= radians;
                 lon1 *= radians;
                 lat2 *= radians;
                 lon2 *= radians;
-
                 const deltaLon = lon2 - lon1;
-
                 const y = Math.sin(deltaLon) * Math.cos(lat2);
                 const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-
                 let bearing = Math.atan2(y, x);
-
                 // Convert from radians to degrees
                 bearing = (bearing + 2 * Math.PI) % (2 * Math.PI);
                 bearing = bearing * 180 / Math.PI;
-
                 return bearing + 180;
+            }
+
+            function lineLength(from, to) {
+                const [lat1, lon1] = from;
+                const [lat2, lon2] = to;
+
+                const earthRadiusKm = 6371;
+
+                const dLat = degreesToRadians(lat2 - lat1);
+                const dLon = degreesToRadians(lon2 - lon1);
+
+                const a =
+                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(degreesToRadians(lat1)) * Math.cos(degreesToRadians(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                const distance = earthRadiusKm * c;
+                const distanceMeters = distance * 1000; // Convert to meters
+                return Math.ceil(distanceMeters);
+            }
+
+            function degreesToRadians(degrees) {
+                return degrees * Math.PI / 180;
             }
 
 
@@ -125,7 +144,10 @@
                     const angle = bearing([lat, lng], [lat1, lng1]);
                     console.log('angle', angle);
 
-                    const point = L.marker([lat1, lng1], {
+                    const length = lineLength([lat, lng], [lat1, lng1]);
+                    console.log('length', length);
+
+                    arrow = L.marker([lat1, lng1], {
                         icon: L.divIcon({
                             className: 'my-div-icon',
                             html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
@@ -135,7 +157,7 @@
                         draggable: true,
                     }).addTo(map);
 
-                    point.on('drag', function (e) {
+                    arrow.on('drag', function (e) {
                         lat1 = this.getLatLng().lat;
                         lng1 = this.getLatLng().lng;
                         polyline.setLatLngs([
@@ -143,7 +165,7 @@
                             [lat1, lng1]
                         ]);
                     });
-                    point.on('dragend', function (e) {
+                    arrow.on('dragend', function (e) {
                         lat1 = this.getLatLng().lat;
                         lng1 = this.getLatLng().lng;
                         polyline.setLatLngs([
@@ -151,11 +173,10 @@
                             [lat1, lng1]
                         ]);
                         const angle = bearing([lat, lng], [lat1, lng1])
-                        point.setIcon(L.divIcon({
+                        arrow.setIcon(L.divIcon({
                             className: 'my-div-icon',
                             html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
                             iconSize: [14, 14],
-                            iconAnchor: [7, 7]
                         }));
                     });
 
@@ -170,11 +191,10 @@
                             [lat1, lng1]
                         ]);
                         const angle = bearing([lat, lng], [lat1, lng1])
-                        point.setIcon(L.divIcon({
+                        arrow.setIcon(L.divIcon({
                             className: 'my-div-icon',
                             html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
                             iconSize: [14, 14],
-                            iconAnchor: [7, 7]
                         }));
                     });
 
@@ -274,7 +294,15 @@
 
                     function handleMouseMove(event) {
                         const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
-                        marker.setRotationAngle(angle + initIconAngle - initialAngle);
+                        const rotationAngle = angle + initIconAngle - initialAngle;
+
+                        marker.setRotationAngle(rotationAngle);
+
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
                     }
 
                     function stopRotation() {
@@ -317,12 +345,12 @@
         });
 
 
-        var marker = L.customMarker([51.5, -0.09], {
+        const marker = L.customMarker([51.5, -0.09], {
             draggable: true,
             rotationAngle: 0,
             icon: L.divIcon({
                 className: 'my-div-icon',
-                html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 50px;">`,
+                html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">`,
                 iconSize: [40, 50],
                 iconAnchor: [20, 50]
             }),
