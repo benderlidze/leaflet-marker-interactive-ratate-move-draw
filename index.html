@@ -61,8 +61,8 @@
             // save these original methods before they are overwritten
             var proto_initIcon = L.Marker.prototype._initIcon;
             var proto_setPos = L.Marker.prototype._setPos;
-
             var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
+            let polyline = null;
 
             L.Marker.addInitHook(function () {
                 var iconOptions = this.options.icon && this.options.icon.options;
@@ -73,8 +73,28 @@
                 this.options.rotationOrigin = this.options.rotationOrigin || iconAnchor || 'center bottom';
                 this.options.rotationAngle = this.options.rotationAngle || 0;
 
-                // Ensure marker keeps rotated during dragging
-                this.on('drag', function (e) { e.target._applyRotation(); });
+
+                const { lat, lng } = this.getLatLng();
+                const polylinePoints = [
+                    [lat, lng],
+                    [lat - 0.01, lng - 0.01]
+                ];
+                polyline = L.polyline(polylinePoints, {
+                    color: 'blue',
+                    weight: 3,
+                    opacity: 1,
+                    smoothFactor: 1
+                }).addTo(map);
+
+
+                this.on('drag', function (e) {
+                    e.target._applyRotation();
+                    //update polyline
+                    polyline.setLatLngs([
+                        this.getLatLng(),
+                        [lat - 0.01, lng - 0.01]
+                    ]);
+                });
 
                 this.on('dragend', function (e) {
                     this.options.onDragEnd(e);
@@ -111,6 +131,7 @@
                     closeButton.innerHTML = 'X';
                     closeButton.addEventListener('click', function (e) {
                         this.options.onDelete();
+                        polyline.remove()
                         this.remove()
                     }.bind(this));
 
@@ -234,25 +255,25 @@
             }
         }).addTo(map);
 
-        var m2 = L.marker({ lat: 51.67984315638427, lng: -0.1407043457031251 }, {
-            rotationAngle: 45,
-            draggable: true,
-            icon: L.divIcon({
-                className: 'my-div-icon',
-                html: `<img src="icons/Stop_sign.png" style="width: 50px; height: 50px;">`,
-                iconSize: [50, 50],
-                iconAnchor: [25, 50]
-            }),
-            onDelete: function (e) {
-                console.log('On delete')
-            },
-            onDragEnd: function (e) {
-                console.log('On drag end', e)
-            },
-            onRotate: function (e) {
-                console.log('On rotate')
-            }
-        }).addTo(map);
+        // var m2 = L.marker({ lat: 51.67984315638427, lng: -0.1407043457031251 }, {
+        //     rotationAngle: 45,
+        //     draggable: true,
+        //     icon: L.divIcon({
+        //         className: 'my-div-icon',
+        //         html: `<img src="icons/Stop_sign.png" style="width: 50px; height: 50px;">`,
+        //         iconSize: [50, 50],
+        //         iconAnchor: [25, 50]
+        //     }),
+        //     onDelete: function (e) {
+        //         console.log('On delete')
+        //     },
+        //     onDragEnd: function (e) {
+        //         console.log('On drag end', e)
+        //     },
+        //     onRotate: function (e) {
+        //         console.log('On rotate')
+        //     }
+        // }).addTo(map);
 
 
 
