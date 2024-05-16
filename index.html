@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quick Start - Leaflet</title>
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .button {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+            user-select: none;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .red {
+            background-color: red;
+            color: white;
+        }
+
+        .popupCustom>.leaflet-popup-content-wrapper {
+            background: none;
+            box-shadow: none;
+        }
+
+        .popupCustom>.leaflet-popup-tip-container {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div onclick=""></div>
+
+    <div id="map" style="width: 700px; height: 100vh;"></div>
+    <script>
+
+        (function () {
+            // save these original methods before they are overwritten
+            var proto_initIcon = L.Marker.prototype._initIcon;
+            var proto_setPos = L.Marker.prototype._setPos;
+
+            var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
+
+            L.Marker.addInitHook(function () {
+                var iconOptions = this.options.icon && this.options.icon.options;
+                var iconAnchor = iconOptions && this.options.icon.options.iconAnchor;
+                if (iconAnchor) {
+                    iconAnchor = (iconAnchor[0] + 'px ' + iconAnchor[1] + 'px');
+                }
+                this.options.rotationOrigin = this.options.rotationOrigin || iconAnchor || 'center bottom';
+                this.options.rotationAngle = this.options.rotationAngle || 0;
+
+                // Ensure marker keeps rotated during dragging
+                this.on('drag', function (e) { e.target._applyRotation(); });
+
+            });
+
+            L.Marker.include({
+                _initIcon: function () {
+                    proto_initIcon.call(this);
+
+                    const container = document.createElement('div');
+                    container.style = 'display:flex; flex-direction: row; position:absolute; top: -30px;  transform: translate(-50%, 0px); left: 50%; gap:4px;';
+
+                    const moveButton = document.createElement('button');
+                    moveButton.className = 'button';
+                    moveButton.innerHTML = 'M';
+                    moveButton.addEventListener('click', function () {
+                    }.bind(this));
+
+                    const rotateButton = document.createElement('button');
+                    rotateButton.className = 'button ';
+                    rotateButton.innerHTML = 'R';
+                    rotateButton.addEventListener('mousedown', this._handleRotation.bind(this));
+
+                    const editButton = document.createElement('button');
+                    editButton.className = 'button';
+                    editButton.innerHTML = 'E';
+                    editButton.addEventListener('click', function () {
+                    }.bind(this));
+
+                    const closeButton = document.createElement('button');
+                    closeButton.className = 'button red';
+                    closeButton.innerHTML = 'X';
+                    closeButton.addEventListener('click', function (e) {
+                        container.style.display = 'none';
+                        e.stopPropagation();
+                    }.bind(this));
+
+                    container.appendChild(moveButton);
+                    container.appendChild(rotateButton);
+                    container.appendChild(editButton);
+                    container.appendChild(closeButton);
+
+                    this._icon.addEventListener('click', function () {
+                        const display = container.style.display;
+                        if (container.style.display === 'none') {
+                            container.style.display = 'flex';
+                        }
+                    });
+
+                    this._icon.appendChild(container);
+                },
+
+                _setPos: function (pos) {
+                    proto_setPos.call(this, pos);
+                    this._applyRotation();
+                },
+
+                _applyRotation: function () {
+                    if (this.options.rotationAngle) {
+                        this._icon.style[L.DomUtil.TRANSFORM + 'Origin'] = this.options.rotationOrigin;
+
+                        if (oldIE) {
+                            // for IE 9, use the 2D rotation
+                            this._icon.style[L.DomUtil.TRANSFORM] = 'rotate(' + this.options.rotationAngle + 'deg)';
+                        } else {
+                            // for modern browsers, prefer the 3D accelerated version
+                            this._icon.style[L.DomUtil.TRANSFORM] += ' rotateZ(' + this.options.rotationAngle + 'deg)';
+                        }
+                    }
+                },
+
+                _handleRotation: function (event) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const marker = this;
+                    const initIconAngle = this.options.rotationAngle;
+
+                    // Calculate initial rotation angle based on the difference between mouse position and marker center
+                    const rect = marker._icon.getBoundingClientRect();
+                    const center = {
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2
+                    };
+                    const initialAngle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+
+                    function handleMouseMove(event) {
+                        const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+                        marker.setRotationAngle(angle + initIconAngle - initialAngle);
+                    }
+
+                    function stopRotation() {
+                        document.removeEventListener('mousemove', handleMouseMove);
+                    }
+                    document.addEventListener('mousemove', handleMouseMove);
+                    window.addEventListener('mouseup', stopRotation);
+                },
+
+                setRotationAngle: function (angle) {
+                    this.options.rotationAngle = angle;
+                    this.update();
+                    return this;
+                },
+
+                setRotationOrigin: function (origin) {
+                    this.options.rotationOrigin = origin;
+                    this.update();
+                    return this;
+                }
+            });
+        })();
+
+        const map = L.map('map').setView([51.505, -0.09], 11);
+
+        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+
+        //marker icon image 
+        const icon = L.icon({
+            iconUrl: 'icons/Speed_limit_50_sign.png',
+            iconSize: [40, 50],
+            iconAnchor: [20, 50],
+            popupAnchor: [0, -50]
+        });
+
+        // const marker = L.marker([51.5, -0.09], {
+        //     rotationAngle: 10,
+        //     draggable: true,
+        //     icon: icon,
+        // }).addTo(map);
+
+
+        // marker.bindPopup(`<div style="display:flex;">
+        //     <div class="button">M</div>
+        //     <div class="button">R</div>
+        //     <div class="button">E</div>
+        //     <div class="button">X</div>
+        // </div>`, {
+        //     closeButton: false,
+        //     autoClose: true,
+        //     closeOnClick: true,
+        //     className: 'popupCustom'
+        // }).openPopup();
+
+
+        //rotate marker 45
+
+        var m = L.marker(map.getCenter(), {
+            rotationAngle: 45,
+            draggable: true,
+            icon: L.divIcon({
+                className: 'my-div-icon',
+                html: `
+                <img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 50px;">
+                `,
+                iconSize: [40, 50],
+                iconAnchor: [20, 50]
+            }),
+        }).addTo(map);
+
+
+
+
+
+
+
+    </script>
+
+
+
+</body>
+
+</html>
