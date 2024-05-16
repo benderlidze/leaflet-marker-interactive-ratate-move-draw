@@ -76,6 +76,10 @@
                 // Ensure marker keeps rotated during dragging
                 this.on('drag', function (e) { e.target._applyRotation(); });
 
+                this.on('dragend', function (e) {
+                    this.options.onDragEnd();
+                });
+
             });
 
             L.Marker.include({
@@ -106,8 +110,8 @@
                     closeButton.className = 'button red';
                     closeButton.innerHTML = 'X';
                     closeButton.addEventListener('click', function (e) {
-                        container.style.display = 'none';
-                        e.stopPropagation();
+                        this.options.onDelete();
+                        this.remove()
                     }.bind(this));
 
                     container.appendChild(moveButton);
@@ -115,10 +119,17 @@
                     container.appendChild(editButton);
                     container.appendChild(closeButton);
 
-                    this._icon.addEventListener('click', function () {
-                        const display = container.style.display;
+                    this._icon.addEventListener('click', function (event) {
                         if (container.style.display === 'none') {
                             container.style.display = 'flex';
+                        }
+                        event.stopPropagation();
+                    });
+
+                    //catch click event outside  the container
+                    document.addEventListener('click', function (e) {
+                        if (!container.contains(e.target)) {
+                            container.style.display = 'none';
                         }
                     });
 
@@ -202,39 +213,22 @@
             popupAnchor: [0, -50]
         });
 
-        // const marker = L.marker([51.5, -0.09], {
-        //     rotationAngle: 10,
-        //     draggable: true,
-        //     icon: icon,
-        // }).addTo(map);
 
-
-        // marker.bindPopup(`<div style="display:flex;">
-        //     <div class="button">M</div>
-        //     <div class="button">R</div>
-        //     <div class="button">E</div>
-        //     <div class="button">X</div>
-        // </div>`, {
-        //     closeButton: false,
-        //     autoClose: true,
-        //     closeOnClick: true,
-        //     className: 'popupCustom'
-        // }).openPopup();
-
-
-        //rotate marker 45
-
-        var m = L.marker(map.getCenter(), {
-            rotationAngle: 45,
+        var m1 = L.marker({ lat: 51.57984315638427, lng: -0.09407043457031251 }, {
+            rotationAngle: 0,
             draggable: true,
             icon: L.divIcon({
                 className: 'my-div-icon',
-                html: `
-                <img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 50px;">
-                `,
+                html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 50px;">`,
                 iconSize: [40, 50],
                 iconAnchor: [20, 50]
             }),
+            onDelete: function (e) {
+                console.log('On delete')
+            },
+            onDragEnd: function (e) {
+                console.log('On drag end')
+            }
         }).addTo(map);
 
 
