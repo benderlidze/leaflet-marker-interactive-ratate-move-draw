@@ -77,7 +77,7 @@
                 this.on('drag', function (e) { e.target._applyRotation(); });
 
                 this.on('dragend', function (e) {
-                    this.options.onDragEnd();
+                    this.options.onDragEnd(e);
                 });
 
             });
@@ -227,7 +227,30 @@
                 console.log('On delete')
             },
             onDragEnd: function (e) {
-                console.log('On drag end')
+                console.log('On drag end', e)
+            },
+            onRotate: function (e) {
+                console.log('On rotate')
+            }
+        }).addTo(map);
+
+        var m2 = L.marker({ lat: 51.67984315638427, lng: -0.1407043457031251 }, {
+            rotationAngle: 45,
+            draggable: true,
+            icon: L.divIcon({
+                className: 'my-div-icon',
+                html: `<img src="icons/Stop_sign.png" style="width: 50px; height: 50px;">`,
+                iconSize: [50, 50],
+                iconAnchor: [25, 50]
+            }),
+            onDelete: function (e) {
+                console.log('On delete')
+            },
+            onDragEnd: function (e) {
+                console.log('On drag end', e)
+            },
+            onRotate: function (e) {
+                console.log('On rotate')
             }
         }).addTo(map);
 
