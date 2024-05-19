@@ -34,6 +34,29 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
 
+        #main-container {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+        }
+
+        #icons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: white;
+        }
+
+        .icon {
+            border: 1px solid black;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
         .red {
             background-color: red;
             color: white;
@@ -52,55 +75,163 @@
 
 <body>
 
-    <div onclick=""></div>
+    <div id="main-container">
+        <div id="map" style="width: 700px; height: 100vh;"></div>
+        <div id="icons-container">
+            <div class="icon">
+                <img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">
+            </div>
+            <div class="icon">
+                <img src="icons/Stop_sign.png" style="width:50px; height: 50px;">
+            </div>
+            <div class="icon">
+                <img src="icons/Speed_Limit_50.png" style="width: 60px; height: 60px;">
+            </div>
+        </div>
+    </div>
 
-    <div id="map" style="width: 700px; height: 100vh;"></div>
+
     <script>
 
-        (function () {
+        L.Polyline = L.Polyline.include({
+            getDistance: function (system) {
+                // distance in meters
+                var mDistanse = 0,
+                    length = this._latlngs.length;
+                for (var i = 1; i < length; i++) {
+                    mDistanse += this._latlngs[i].distanceTo(this._latlngs[i - 1]);
+                }
+                return mDistanse;
+            }
+        });
+
+        L.customMarker = function (latlng, options) {
             // save these original methods before they are overwritten
             var proto_initIcon = L.Marker.prototype._initIcon;
             var proto_setPos = L.Marker.prototype._setPos;
             var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
             let polyline = null;
+            let arrow = null;
 
-            L.Marker.addInitHook(function () {
-                var iconOptions = this.options.icon && this.options.icon.options;
-                var iconAnchor = iconOptions && this.options.icon.options.iconAnchor;
-                if (iconAnchor) {
-                    iconAnchor = (iconAnchor[0] + 'px ' + iconAnchor[1] + 'px');
-                }
-                this.options.rotationOrigin = this.options.rotationOrigin || iconAnchor || 'center bottom';
-                this.options.rotationAngle = this.options.rotationAngle || 0;
+            function bearing(from, to) {
+                let [lat1, lon1] = from
+                let [lat2, lon2] = to
+                const radians = Math.PI / 180;
+                lat1 *= radians;
+                lon1 *= radians;
+                lat2 *= radians;
+                lon2 *= radians;
+                const deltaLon = lon2 - lon1;
+                const y = Math.sin(deltaLon) * Math.cos(lat2);
+                const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+                let bearing = Math.atan2(y, x);
+                // Convert from radians to degrees
+                bearing = (bearing + 2 * Math.PI) % (2 * Math.PI);
+                bearing = bearing * 180 / Math.PI;
+                return bearing + 180;
+            }
 
-                const { lat, lng } = this.getLatLng();
-                const polylinePoints = [
-                    [lat, lng],
-                    [lat - 0.01, lng - 0.01]
-                ];
-                polyline = L.polyline(polylinePoints, {
-                    color: 'blue',
-                    weight: 3,
-                    opacity: 1,
-                    smoothFactor: 1
-                }).addTo(map);
+            function degreesToRadians(degrees) {
+                return degrees * Math.PI / 180;
+            }
 
-                this.on('drag', function (e) {
-                    e.target._applyRotation();
-                    //update polyline
-                    polyline.setLatLngs([
-                        this.getLatLng(),
-                        [lat - 0.01, lng - 0.01]
-                    ]);
-                });
 
-                this.on('dragend', function (e) {
-                    this.options.onDragEnd(e);
-                });
+            var CustomMarker = L.Marker.extend({
+                options: {
+                    rotationOrigin: 'center bottom',
+                    rotationAngle: 0,
+                    onDragEnd: function () { },
+                    onDelete: function () { }
+                },
 
-            });
+                initialize: function (latlng, options) {
+                    L.Marker.prototype.initialize.call(this, latlng, options);
+                    this.options = L.Util.extend(this.options, options);
+                },
 
-            L.Marker.include({
+                onAdd: function (map) {
+                    L.Marker.prototype.onAdd.call(this, map);
+
+                    let { lat, lng } = this.getLatLng();
+                    let lat1 = lat - 0.000001;
+                    let lng1 = lng;
+
+                    const polylinePoints = [
+                        [lat, lng],
+                        [lat1, lng1]
+                    ];
+
+                    polyline = L.polyline(polylinePoints, {
+                        color: 'blue',
+                        weight: 3,
+                        opacity: 1,
+                        smoothFactor: 1
+                    }).addTo(map);
+
+                    console.log('polyline', polyline);
+
+                    const angle = bearing([lat, lng], [lat1, lng1]);
+                    console.log('angle', angle);
+
+                    arrow = L.marker([lat1, lng1], {
+                        icon: L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                            iconAnchor: [7, 7]
+                        }),
+                        draggable: true,
+                    }).addTo(map);
+
+                    arrow.on('drag', function (e) {
+                        lat1 = this.getLatLng().lat;
+                        lng1 = this.getLatLng().lng;
+                        polyline.setLatLngs([
+                            [lat, lng],
+                            [lat1, lng1]
+                        ]);
+                    });
+                    arrow.on('dragend', function (e) {
+                        lat1 = this.getLatLng().lat;
+                        lng1 = this.getLatLng().lng;
+                        polyline.setLatLngs([
+                            [lat, lng],
+                            [lat1, lng1]
+                        ]);
+                        const angle = bearing([lat, lng], [lat1, lng1])
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
+                    });
+
+
+                    this.on('drag', function (e) {
+
+                        console.log('drag', e);
+
+                        e.target._applyRotation();
+                        //update polyline
+                        lat = this.getLatLng().lat;
+                        lng = this.getLatLng().lng;
+                        polyline.setLatLngs([
+                            [lat, lng],
+                            [lat1, lng1]
+                        ]);
+                        const angle = bearing([lat, lng], [lat1, lng1])
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
+                    });
+
+                    this.on('dragend', function (e) {
+                        this.options.onDragEnd(e);
+                    });
+                },
+
                 _initIcon: function () {
                     proto_initIcon.call(this);
 
@@ -109,13 +240,13 @@
 
                     const moveButton = document.createElement('button');
                     moveButton.className = 'button';
-                    moveButton.innerHTML = 'M';
+                    moveButton.innerHTML = '<img src="icons/move.svg" style="width:100%;height:100%">';
                     moveButton.addEventListener('click', function () {
                     }.bind(this));
 
                     const rotateButton = document.createElement('button');
                     rotateButton.className = 'button ';
-                    rotateButton.innerHTML = 'R';
+                    rotateButton.innerHTML = '<img src="icons/rotate.svg" style="width:100%;height:100%">';
                     rotateButton.addEventListener('mousedown', this._handleRotation.bind(this));
 
                     const editButton = document.createElement('button');
@@ -130,6 +261,7 @@
                     closeButton.addEventListener('click', function (e) {
                         this.options.onDelete();
                         polyline.remove()
+                        arrow.remove()
                         this.remove()
                     }.bind(this));
 
@@ -192,7 +324,18 @@
 
                     function handleMouseMove(event) {
                         const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
-                        marker.setRotationAngle(angle + initIconAngle - initialAngle);
+                        const rotationAngle = angle + initIconAngle - initialAngle;
+
+                        marker.setRotationAngle(rotationAngle);
+
+                        console.log('polyline.getDistance() ', polyline.getDistance());
+                        if (polyline && polyline.getDistance() < 2) {
+                            arrow.setIcon(L.divIcon({
+                                className: 'my-div-icon',
+                                html: `<img src="icons/arrow.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
+                                iconSize: [14, 14],
+                            }));
+                        }
                     }
 
                     function stopRotation() {
@@ -214,7 +357,10 @@
                     return this;
                 }
             });
-        })();
+
+            return new CustomMarker(latlng, options);
+        };
+
 
         const map = L.map('map').setView([51.505, -0.09], 11);
 
@@ -223,33 +369,59 @@
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        //marker icon image 
-        const icon = L.icon({
-            iconUrl: 'icons/Speed_limit_50_sign.png',
-            iconSize: [40, 50],
-            iconAnchor: [20, 50],
-            popupAnchor: [0, -50]
-        });
-
-        var m1 = L.marker({ lat: 51.57984315638427, lng: -0.09407043457031251 }, {
-            rotationAngle: 0,
+        const marker = L.customMarker([51.5, -0.09], {
             draggable: true,
+            rotationAngle: 0,
             icon: L.divIcon({
                 className: 'my-div-icon',
-                html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 50px;">`,
+                html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">`,
                 iconSize: [40, 50],
                 iconAnchor: [20, 50]
             }),
-            onDelete: function (e) {
-                console.log('On delete')
+            onDragEnd: function (event) {
+                console.log("Marker dragged to:", event.target.getLatLng());
             },
-            onDragEnd: function (e) {
-                console.log('On drag end', e)
-            },
-            onRotate: function (e) {
-                console.log('On rotate')
+            onDelete: function () {
+                console.log("Marker deleted");
             }
         }).addTo(map);
+
+
+        const target = document.getElementById("map")
+        target.ondragover = function (e) {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = "move"
+        }
+
+        target.ondrop = function (e) {
+            e.preventDefault()
+            const imagePath = e.dataTransfer.getData("text/plain")
+
+            const val = target.getBoundingClientRect();
+            const { x, y } = val;
+            const coordinates = map.containerPointToLatLng(L.point([e.clientX - x, e.clientY - y]))
+
+            const image = `<img src="${imagePath}" style="width: 40px; height: 48px;">`
+
+            const marker = L.customMarker(coordinates, {
+                draggable: true,
+                rotationAngle: 0,
+                icon: L.divIcon({
+                    className: 'my-div-icon',
+                    html: image,
+                    iconSize: [40, 50],
+                    iconAnchor: [20, 50]
+                }),
+                onDragEnd: function (event) {
+                    console.log("Marker dragged to:", event.target.getLatLng());
+                },
+                onDelete: function () {
+                    console.log("Marker deleted");
+                }
+            }).addTo(map);
+
+        }
+
 
     </script>
 </body>

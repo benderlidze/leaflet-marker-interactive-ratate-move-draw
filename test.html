@@ -136,10 +136,11 @@
             }
 
 
-            var CustomMarker = L.Marker.extend({
+            const CustomMarker = L.Marker.extend({
                 options: {
                     rotationOrigin: 'center bottom',
                     rotationAngle: 0,
+                    draggingAll: false,
                     onDragEnd: function () { },
                     onDelete: function () { }
                 },
@@ -209,17 +210,23 @@
 
                     this.on('drag', function (e) {
 
-                        console.log('drag', e);
-
                         e.target._applyRotation();
                         //update polyline
                         lat = this.getLatLng().lat;
                         lng = this.getLatLng().lng;
+
+                        if (this.options.draggingAll) {
+                            lat1 = lat - 0.000001;
+                            lng1 = lng;
+                        }
+
                         polyline.setLatLngs([
                             [lat, lng],
                             [lat1, lng1]
                         ]);
+
                         const angle = bearing([lat, lng], [lat1, lng1])
+                        arrow.setLatLng([lat1, lng1]);
                         arrow.setIcon(L.divIcon({
                             className: 'my-div-icon',
                             html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
@@ -241,8 +248,19 @@
                     const moveButton = document.createElement('button');
                     moveButton.className = 'button';
                     moveButton.innerHTML = '<img src="icons/move.svg" style="width:100%;height:100%">';
-                    moveButton.addEventListener('click', function () {
+                    moveButton.addEventListener('mousedown', function (event) {
+
+                        this.options.draggingAll = true;
+                        this._updateArrowAngle(event);
+
                     }.bind(this));
+                    moveButton.addEventListener('mouseup', function (event) {
+                        this.options.draggingAll = false;
+
+                        this._updateArrowAngle(event);
+
+                    }.bind(this));
+
 
                     const rotateButton = document.createElement('button');
                     rotateButton.className = 'button ';
@@ -252,7 +270,8 @@
                     const editButton = document.createElement('button');
                     editButton.className = 'button';
                     editButton.innerHTML = 'E';
-                    editButton.addEventListener('click', function () {
+                    editButton.addEventListener('click', function (e) {
+
                     }.bind(this));
 
                     const closeButton = document.createElement('button');
@@ -285,6 +304,29 @@
                     });
 
                     this._icon.appendChild(container);
+                },
+
+                _updateArrowAngle: function (event) {
+
+                    console.log('_updateArrowAngle',);
+                    //update arrow angle
+                    const marker = this;
+                    const initIconAngle = this.options.rotationAngle;
+                    const rect = marker._icon.getBoundingClientRect();
+                    const center = {
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2
+                    };
+                    const initialAngle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+                    const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+                    const rotationAngle = angle + initIconAngle - initialAngle;
+                    if (polyline && polyline.getDistance() < 2) {
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
+                    }
                 },
 
                 _setPos: function (pos) {
@@ -361,7 +403,6 @@
             return new CustomMarker(latlng, options);
         };
 
-
         const map = L.map('map').setView([51.505, -0.09], 11);
 
         const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -397,7 +438,6 @@
             e.preventDefault()
             const imagePath = e.dataTransfer.getData("text/plain")
 
-
             const val = target.getBoundingClientRect();
             const { x, y } = val;
             const coordinates = map.containerPointToLatLng(L.point([e.clientX - x, e.clientY - y]))
@@ -422,8 +462,6 @@
             }).addTo(map);
 
         }
-
-
     </script>
 </body>
 
