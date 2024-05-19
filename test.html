@@ -387,6 +387,43 @@
         }).addTo(map);
 
 
+        const target = document.getElementById("map")
+        target.ondragover = function (e) {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = "move"
+        }
+
+        target.ondrop = function (e) {
+            e.preventDefault()
+            const imagePath = e.dataTransfer.getData("text/plain")
+
+
+            const val = target.getBoundingClientRect();
+            const { x, y } = val;
+            const coordinates = map.containerPointToLatLng(L.point([e.clientX - x, e.clientY - y]))
+
+            const image = `<img src="${imagePath}" style="width: 40px; height: 48px;">`
+
+            const marker = L.customMarker(coordinates, {
+                draggable: true,
+                rotationAngle: 0,
+                icon: L.divIcon({
+                    className: 'my-div-icon',
+                    html: image,
+                    iconSize: [40, 50],
+                    iconAnchor: [20, 50]
+                }),
+                onDragEnd: function (event) {
+                    console.log("Marker dragged to:", event.target.getLatLng());
+                },
+                onDelete: function () {
+                    console.log("Marker deleted");
+                }
+            }).addTo(map);
+
+        }
+
+
     </script>
 </body>
 
