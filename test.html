@@ -34,6 +34,29 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
 
+        #main-container {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+        }
+
+        #icons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: white;
+        }
+
+        .icon {
+            border: 1px solid black;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
         .red {
             background-color: red;
             color: white;
@@ -52,9 +75,22 @@
 
 <body>
 
-    <div onclick=""></div>
+    <div id="main-container">
+        <div id="map" style="width: 700px; height: 100vh;"></div>
+        <div id="icons-container">
+            <div class="icon">
+                <img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">
+            </div>
+            <div class="icon">
+                <img src="icons/Stop_sign.png" style="width:50px; height: 50px;">
+            </div>
+            <div class="icon">
+                <img src="icons/Speed_Limit_50.png" style="width: 60px; height: 60px;">
+            </div>
+        </div>
+    </div>
 
-    <div id="map" style="width: 700px; height: 100vh;"></div>
+
     <script>
 
         L.Polyline = L.Polyline.include({
@@ -172,6 +208,9 @@
 
 
                     this.on('drag', function (e) {
+
+                        console.log('drag', e);
+
                         e.target._applyRotation();
                         //update polyline
                         lat = this.getLatLng().lat;
@@ -207,7 +246,7 @@
 
                     const rotateButton = document.createElement('button');
                     rotateButton.className = 'button ';
-                    rotateButton.innerHTML = 'R';
+                    rotateButton.innerHTML = '<img src="icons/rotate.svg" style="width:100%;height:100%">';
                     rotateButton.addEventListener('mousedown', this._handleRotation.bind(this));
 
                     const editButton = document.createElement('button');
@@ -222,6 +261,7 @@
                     closeButton.addEventListener('click', function (e) {
                         this.options.onDelete();
                         polyline.remove()
+                        arrow.remove()
                         this.remove()
                     }.bind(this));
 
@@ -328,7 +368,6 @@
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
-
 
         const marker = L.customMarker([51.5, -0.09], {
             draggable: true,
