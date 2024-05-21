@@ -135,10 +135,9 @@
                 return degrees * Math.PI / 180;
             }
 
-
             const CustomMarker = L.Marker.extend({
                 options: {
-                    rotationOrigin: 'center bottom',
+                    rotationOrigin: 'center center',
                     rotationAngle: 0,
                     draggingAll: false,
                     onDragEnd: function () { },
@@ -169,7 +168,10 @@
                         smoothFactor: 1
                     }).addTo(map);
 
+                    console.log('polyline', polyline);
+
                     const angle = bearing([lat, lng], [lat1, lng1]);
+                    console.log('angle', angle);
 
                     arrow = L.marker([lat1, lng1], {
                         icon: L.divIcon({
@@ -182,34 +184,27 @@
                     }).addTo(map);
 
                     arrow.on('drag', function (e) {
-                        lat1 = arrow.getLatLng().lat;
-                        lng1 = arrow.getLatLng().lng;
-
-                        const iconCenterpointLatLng = this._iconCenterLatLng(marker._icon);
+                        lat1 = this.getLatLng().lat;
+                        lng1 = this.getLatLng().lng;
                         polyline.setLatLngs([
-                            iconCenterpointLatLng,
+                            [lat, lng],
                             [lat1, lng1]
                         ]);
-
-                    }.bind(this))
-
+                    });
                     arrow.on('dragend', function (e) {
-                        lat1 = arrow.getLatLng().lat;
-                        lng1 = arrow.getLatLng().lng;
-
-                        const iconCenterpointLatLng = this._iconCenterLatLng(marker._icon);
+                        lat1 = this.getLatLng().lat;
+                        lng1 = this.getLatLng().lng;
                         polyline.setLatLngs([
-                            iconCenterpointLatLng,
+                            [lat, lng],
                             [lat1, lng1]
                         ]);
-
                         const angle = bearing([lat, lng], [lat1, lng1])
                         arrow.setIcon(L.divIcon({
                             className: 'my-div-icon',
                             html: `<img src="icons/circle.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
                             iconSize: [14, 14],
                         }));
-                    }.bind(this));
+                    });
 
 
                     this.on('drag', function (e) {
@@ -223,8 +218,6 @@
                         // const pointXY = L.point(iconCenterX, iconCenterY);
                         // const pointlatlng = map.layerPointToLatLng(pointXY);
 
-                        const iconCenterpointLatLng = this._iconCenterLatLng(e.target._icon);
-
 
                         e.target._applyRotation();
                         //update polyline
@@ -237,7 +230,7 @@
                         }
 
                         polyline.setLatLngs([
-                            iconCenterpointLatLng,
+                            [lat, lng],
                             [lat1, lng1]
                         ]);
 
@@ -334,7 +327,7 @@
 
                 _updateArrowAngle: function (event) {
 
-                    console.log('_updateArrowAngle',);
+                    console.log('_updateArrowAngle!!!',);
                     //update arrow angle
                     const marker = this;
                     const initIconAngle = this.options.rotationAngle;
@@ -443,7 +436,7 @@
                 className: 'my-div-icon',
                 html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">`,
                 iconSize: [40, 50],
-                iconAnchor: [20, 50]
+                iconAnchor: [20, 25]
             }),
             onDragEnd: function (event) {
                 console.log("Marker dragged to:", event.target.getLatLng());
@@ -477,7 +470,7 @@
                     className: 'my-div-icon',
                     html: image,
                     iconSize: [40, 50],
-                    iconAnchor: [40, 50]
+                    iconAnchor: [20, 50]
                 }),
                 onDragEnd: function (event) {
                     console.log("Marker dragged to:", event.target.getLatLng());
