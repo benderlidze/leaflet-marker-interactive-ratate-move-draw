@@ -252,6 +252,7 @@
                     proto_initIcon.call(this);
 
                     const container = document.createElement('div');
+                    container.className = 'actions-container';
                     container.style = 'display:flex; flex-direction: row; position:absolute; top: -30px;  transform: translate(-50%, 0px); left: 50%; gap:4px;';
 
                     const moveButton = document.createElement('button');
@@ -314,35 +315,6 @@
 
                     this._icon.appendChild(container);
 
-
-                    // this._icon.addEventListener('drop', function (event) {
-                    //     event.preventDefault();
-                    //     event.stopPropagation();
-                    //     const imagePath = event.dataTransfer.getData("text/plain")
-                    //     console.log('image path', imagePath);
-                    //     console.log('this', this);
-                    //     console.log('this', this._icon);
-                    //     const prevIcons = this._icon.querySelectorAll('.marker-icon');
-                    //     console.log('prevIcon', prevIcons);
-                    //     const div = document.createElement('div');
-                    //     div.style = "display:flex;flex-direction:column;gap:2px"
-                    //     Array.from(prevIcons).map(prevIcon => {
-                    //         div.appendChild(prevIcon);
-                    //     })
-                    //     const img = document.createElement('img');
-                    //     img.src = imagePath;
-                    //     img.style = "width: 40px; height: 48px;"
-                    //     img.className = "marker-icon"
-                    //     div.prepend(img);
-                    //     this.setIcon(L.divIcon({
-                    //         className: 'my-div-icon',
-                    //         html: div,
-                    //         iconSize: [40, 50],
-                    //         iconAnchor: [20, 25]
-                    //     }));
-                    // }.bind(this));
-
-
                     const dropHandler = function (event) {
                         event.preventDefault();
                         event.stopPropagation();
@@ -350,16 +322,19 @@
                         const imagePath = event.dataTransfer.getData("text/plain");
                         const prevIcons = this._icon.querySelectorAll('.marker-icon');
 
+                        let totalHeight = 0;
                         const div = document.createElement('div');
-                        div.style = "display:flex;flex-direction:column;gap:1px";
 
                         Array.from(prevIcons).forEach(prevIcon => {
                             div.appendChild(prevIcon);
+                            totalHeight += 48;
                         });
+
+                        div.style = `transform: translateY(-${totalHeight}px); display:flex;flex-direction:column;gap:1px;`;
 
                         const img = document.createElement('img');
                         img.src = imagePath;
-                        img.style = "width: 40px; height: 48px;";
+                        img.style = " width: 40px; height: 48px;";
                         img.className = "marker-icon";
                         div.prepend(img);
 
@@ -370,7 +345,13 @@
                             iconAnchor: [20, 25]
                         }));
 
+                        console.log('this', this._icon);
+
+                        const container = this._icon.querySelector('.actions-container');
+                        container.style.top = `-${totalHeight + 30}px`;
+
                     }.bind(this);
+
 
                     if (!dropHandlerInitialized) { //intit ONCE!
                         this._icon.addEventListener('drop', dropHandler);
