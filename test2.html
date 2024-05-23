@@ -247,13 +247,14 @@
 
                 _initIcon: function () {
 
-                    console.log('_initIcon!!!!!!!!!!!!!!', this);
+                    console.log('_initIcon!!!!!!!!!!!!!!');
 
                     proto_initIcon.call(this);
 
                     const container = document.createElement('div');
                     container.className = 'actions-container';
                     container.style = 'display:flex; flex-direction: row; position:absolute; top: -30px;  transform: translate(-50%, 0px); left: 50%; gap:4px;';
+
                     const moveButton = document.createElement('button');
                     moveButton.className = 'button';
                     moveButton.innerHTML = '<img src="icons/move.svg" style="width:100%;height:100%">';
@@ -308,10 +309,7 @@
                         }
                     });
 
-                    console.log('this._icon', this._icon);
                     this._icon.appendChild(container);
-
-
 
                     function dropHandler(event) {
                         event.preventDefault();
@@ -324,6 +322,7 @@
                         const prevIcons = this._icon.querySelectorAll('.marker-icon-wrapper');
                         Array.from(prevIcons).forEach(prevIcon => {
                             div.appendChild(prevIcon);
+                            totalHeight += 48;
                         });
 
                         const wrapper = document.createElement('div');
@@ -338,14 +337,12 @@
                         const imagePath = event.dataTransfer.getData("text/plain");
                         const img = document.createElement('img');
                         img.src = imagePath;
-                        img.style = "width: 40px; height: 48px;";
+                        img.style = " width: 40px; height: 48px;";
                         img.className = "marker-icon";
                         wrapper.appendChild(deleteButton);
                         wrapper.appendChild(img);
 
                         div.prepend(wrapper);
-                        div.prepend(container);
-                        div.style = `transform: translateY(calc(-100% + 48px)); display:flex; flex-direction:column; gap:1px;`;
 
                         this.setIcon(L.divIcon({
                             className: 'my-div-icon',
@@ -353,6 +350,10 @@
                             iconSize: [40, 50],
                             iconAnchor: [20, 25]
                         }));
+
+                        div.style = `transform: translateY(-${totalHeight}px); display:flex;flex-direction:column;gap:1px;`;
+                        const container = this._icon.querySelector('.actions-container');
+                        container.style.top = `-${totalHeight + 30}px`;
 
                     };
 
@@ -480,13 +481,7 @@
             rotationAngle: 0,
             icon: L.divIcon({
                 className: 'my-div-icon',
-                html: `
-                <div class="markers-icons-div">
-                    <div class="marker-icon-wrapper">
-                        <img class="marker-icon" src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">
-                    </div>
-                </div>
-                `,
+                html: `<div class="marker-icon-wrapper"><img class="marker-icon" src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;"></div>`,
                 iconSize: [40, 50],
                 iconAnchor: [20, 25]
             }),
@@ -520,17 +515,14 @@
             const targetDiv = e.target
 
             if (targetDiv.id && targetDiv.id === "map") {
-
-
-
                 const marker = L.customMarker(coordinates, {
                     draggable: true,
                     rotationAngle: 0,
                     icon: L.divIcon({
                         className: 'my-div-icon',
-                        html: `<div class="marker-icon-wrapper">${image}</div>`,
+                        html: image,
                         iconSize: [40, 50],
-                        iconAnchor: [20, 25]
+                        iconAnchor: [20, 50]
                     }),
                     onDragEnd: function (event) {
                         console.log("Marker dragged to:", event.target.getLatLng());
@@ -551,10 +543,6 @@
 
         }
     </script>
-
-
-
-
 </body>
 
 </html>
