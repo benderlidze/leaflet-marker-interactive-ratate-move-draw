@@ -523,7 +523,13 @@
                     rotationAngle: 0,
                     icon: L.divIcon({
                         className: 'my-div-icon',
-                        html: `<div class="marker-icon-wrapper">${image}</div>`,
+                        html: `
+                            <div class="markers-icons-div">
+                                <div class="marker-icon-wrapper">
+                                    ${image}
+                                </div>
+                            </div>
+                        `,
                         iconSize: [40, 50],
                         iconAnchor: [20, 25]
                     }),
@@ -542,14 +548,8 @@
 
             }
 
-
-
         }
     </script>
-
-
-
-
 </body>
 
 </html>
