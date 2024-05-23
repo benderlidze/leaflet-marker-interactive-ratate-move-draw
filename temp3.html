@@ -289,9 +289,7 @@
                         this.remove()
                     }.bind(this));
 
-                    //container.appendChild(moveButton);
                     container.appendChild(rotateButton);
-                    //container.appendChild(editButton);
                     container.appendChild(closeButton);
 
                     this._icon.addEventListener('click', function (event) {
@@ -309,7 +307,7 @@
                     });
 
                     console.log('this._icon', this._icon);
-                    this._icon.appendChild(container);
+                    this._icon.querySelector('.markers-icons-div').appendChild(container);
 
 
 
@@ -344,7 +342,6 @@
                         wrapper.appendChild(img);
 
                         div.prepend(wrapper);
-                        div.prepend(container);
                         div.style = `transform: translateY(calc(-100% + 48px)); display:flex; flex-direction:column; gap:1px;`;
 
                         this.setIcon(L.divIcon({
@@ -520,8 +517,6 @@
             const targetDiv = e.target
 
             if (targetDiv.id && targetDiv.id === "map") {
-
-
 
                 const marker = L.customMarker(coordinates, {
                     draggable: true,
