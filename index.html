@@ -114,6 +114,13 @@
             let arrow = null;
             let dropHandlerInitialized = false;
 
+            const markerProps = {
+                position: latlng,
+                angle: 0,
+                icons: [],
+                line: null,
+            }
+
             function bearing(from, to) {
                 let [lat1, lon1] = from
                 let [lat2, lon2] = to
@@ -141,8 +148,11 @@
                     rotationOrigin: 'center center',
                     rotationAngle: 0,
                     draggingAll: false,
+
                     onDragEnd: function () { },
-                    onDelete: function () { }
+                    onDelete: function () { },
+                    onMarkerInteractive: function () {
+                    }
                 },
 
                 initialize: function (latlng, options) {
@@ -240,7 +250,8 @@
                     });
 
                     this.on('dragend', function (e) {
-                        this.options.onDragEnd(e);
+                        markerProps.position = this.getLatLng();
+                        this.options.onMarkerInteractive(markerProps);
                     });
                 },
 
@@ -412,6 +423,8 @@
 
                 _handleRotation: function (event) {
 
+                    console.log('rotation', event);
+
                     event.preventDefault();
                     event.stopPropagation();
 
@@ -429,21 +442,15 @@
                     function handleMouseMove(event) {
                         const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
                         const rotationAngle = angle + initIconAngle - initialAngle;
-
                         marker.setRotationAngle(rotationAngle);
-
-                        console.log('polyline.getDistance() ', polyline.getDistance());
-                        if (polyline && polyline.getDistance() < 2) {
-                            arrow.setIcon(L.divIcon({
-                                className: 'my-div-icon',
-                                html: `<img src="icons/circle.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
-                                iconSize: [14, 14],
-                            }));
-                        }
                     }
 
-                    function stopRotation() {
+                    const stopRotation = () => {
                         document.removeEventListener('mousemove', handleMouseMove);
+                        window.removeEventListener('mouseup', stopRotation);
+
+                        console.log('stop', this);
+                        this.options.onMarkerInteractive(markerProps);
                     }
                     document.addEventListener('mousemove', handleMouseMove);
                     window.addEventListener('mouseup', stopRotation);
@@ -451,6 +458,9 @@
 
                 setRotationAngle: function (angle) {
                     this.options.rotationAngle = angle;
+
+                    markerProps.angle = angle;
+
                     this.update();
                     return this;
                 },
@@ -493,6 +503,9 @@
             },
             onDelete: function () {
                 console.log("Marker deleted");
+            },
+            onMarkerInteractive: function (props) {
+                console.log('props===>>>', props);
             }
         }).addTo(map);
 
