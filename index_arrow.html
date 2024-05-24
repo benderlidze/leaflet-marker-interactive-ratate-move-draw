@@ -112,7 +112,6 @@
             var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
             let polyline = null;
             let arrow = null;
-            let dropHandlerInitialized = false;
 
             function bearing(from, to) {
                 let [lat1, lon1] = from
@@ -136,9 +135,10 @@
                 return degrees * Math.PI / 180;
             }
 
+
             const CustomMarker = L.Marker.extend({
                 options: {
-                    rotationOrigin: 'center center',
+                    rotationOrigin: 'center bottom',
                     rotationAngle: 0,
                     draggingAll: false,
                     onDragEnd: function () { },
@@ -177,7 +177,7 @@
                     arrow = L.marker([lat1, lng1], {
                         icon: L.divIcon({
                             className: 'my-div-icon',
-                            html: `<img src="icons/circle.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
                             iconSize: [14, 14],
                             iconAnchor: [7, 7]
                         }),
@@ -192,7 +192,6 @@
                             [lat1, lng1]
                         ]);
                     });
-
                     arrow.on('dragend', function (e) {
                         lat1 = this.getLatLng().lat;
                         lng1 = this.getLatLng().lng;
@@ -200,16 +199,12 @@
                             [lat, lng],
                             [lat1, lng1]
                         ]);
-                        // const angle = bearing([lat, lng], [lat1, lng1])
-                        // arrow.setIcon(L.divIcon({
-                        //     className: 'my-div-icon',
-                        //     html: `<img src="icons/circle.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
-                        //     iconSize: [14, 14],
-                        // }));
-                    });
-
-                    this.on('drop', function (e) {
-                        console.log('DROP', e);
+                        const angle = bearing([lat, lng], [lat1, lng1])
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
                     });
 
 
@@ -232,11 +227,11 @@
 
                         const angle = bearing([lat, lng], [lat1, lng1])
                         arrow.setLatLng([lat1, lng1]);
-                        // arrow.setIcon(L.divIcon({
-                        //     className: 'my-div-icon',
-                        //     html: `<img src="icons/circle.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
-                        //     iconSize: [14, 14],
-                        // }));
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
                     });
 
                     this.on('dragend', function (e) {
@@ -244,26 +239,26 @@
                     });
                 },
 
-
                 _initIcon: function () {
-
-                    console.log('_initIcon!!!!!!!!!!!!!!', this);
-
                     proto_initIcon.call(this);
 
                     const container = document.createElement('div');
-                    container.className = 'actions-container';
                     container.style = 'display:flex; flex-direction: row; position:absolute; top: -30px;  transform: translate(-50%, 0px); left: 50%; gap:4px;';
+
                     const moveButton = document.createElement('button');
                     moveButton.className = 'button';
                     moveButton.innerHTML = '<img src="icons/move.svg" style="width:100%;height:100%">';
                     moveButton.addEventListener('mousedown', function (event) {
+
                         this.options.draggingAll = true;
                         this._updateArrowAngle(event);
+
                     }.bind(this));
                     moveButton.addEventListener('mouseup', function (event) {
                         this.options.draggingAll = false;
+
                         this._updateArrowAngle(event);
+
                     }.bind(this));
 
 
@@ -289,7 +284,9 @@
                         this.remove()
                     }.bind(this));
 
+                    container.appendChild(moveButton);
                     container.appendChild(rotateButton);
+                    container.appendChild(editButton);
                     container.appendChild(closeButton);
 
                     this._icon.addEventListener('click', function (event) {
@@ -306,71 +303,12 @@
                         }
                     });
 
-                    console.log('this._icon', this._icon);
-                    this._icon.querySelector('.markers-icons-div').appendChild(container);
-
-
-
-                    function dropHandler(event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        let totalHeight = 0;
-                        const div = document.createElement('div');
-                        div.className = 'markers-icons-div';
-
-                        const prevIcons = this._icon.querySelectorAll('.marker-icon-wrapper');
-                        Array.from(prevIcons).forEach(prevIcon => {
-                            div.appendChild(prevIcon);
-                        });
-
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'marker-icon-wrapper';
-                        wrapper.style = 'display:flex;justify-content:center;align-items:center;';
-                        const deleteButton = document.createElement('div');
-                        deleteButton.innerHTML = 'X';
-                        deleteButton.style = 'position:absolute; left:45px; border-radius:5px; background-color:red;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
-                        deleteButton.addEventListener('click', (e) => {
-                            wrapper.remove();
-                        });
-                        const imagePath = event.dataTransfer.getData("text/plain");
-                        const img = document.createElement('img');
-                        img.src = imagePath;
-                        img.style = "width: 40px; height: 48px;";
-                        img.className = "marker-icon";
-                        wrapper.appendChild(deleteButton);
-                        wrapper.appendChild(img);
-
-                        div.prepend(wrapper);
-                        div.style = `transform: translateY(calc(-100% + 48px)); display:flex; flex-direction:column; gap:1px;`;
-
-                        this.setIcon(L.divIcon({
-                            className: 'my-div-icon',
-                            html: div,
-                            iconSize: [40, 50],
-                            iconAnchor: [20, 25]
-                        }));
-
-                    };
-
-                    if (!dropHandlerInitialized) { //intit ONCE!
-                        this._icon.addEventListener('drop', dropHandler.bind(this));
-                        dropHandlerInitialized = true;
-                    }
-                },
-
-                _iconCenterLatLng: function (icon) {
-                    const iconCenter = icon.getBoundingClientRect();
-                    const iconCenterX = iconCenter.left + iconCenter.width / 2;
-                    const iconCenterY = iconCenter.top + iconCenter.height / 2;
-                    const pointXY = L.point(iconCenterX, iconCenterY);
-                    const pointlatlng = map.layerPointToLatLng(pointXY);
-                    return pointlatlng;
+                    this._icon.appendChild(container);
                 },
 
                 _updateArrowAngle: function (event) {
 
-                    console.log('_updateArrowAngle!!!',);
+                    console.log('_updateArrowAngle',);
                     //update arrow angle
                     const marker = this;
                     const initIconAngle = this.options.rotationAngle;
@@ -385,7 +323,7 @@
                     if (polyline && polyline.getDistance() < 2) {
                         arrow.setIcon(L.divIcon({
                             className: 'my-div-icon',
-                            html: `<img src="icons/circle.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
+                            html: `<img src="icons/arrow.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
                             iconSize: [14, 14],
                         }));
                     }
@@ -436,7 +374,7 @@
                         if (polyline && polyline.getDistance() < 2) {
                             arrow.setIcon(L.divIcon({
                                 className: 'my-div-icon',
-                                html: `<img src="icons/circle.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
+                                html: `<img src="icons/arrow.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
                                 iconSize: [14, 14],
                             }));
                         }
@@ -471,20 +409,16 @@
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        const marker = L.customMarker([52, 5.66], {
+
+
+        const marker = L.customMarker([51.5, -0.09], {
             draggable: true,
             rotationAngle: 0,
             icon: L.divIcon({
                 className: 'my-div-icon',
-                html: `
-                <div class="markers-icons-div">
-                    <div class="marker-icon-wrapper">
-                        <img class="marker-icon" src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">
-                    </div>
-                </div>
-                `,
+                html: `<img src="icons/Speed_limit_50_sign.png" style="width: 40px; height: 48px;">`,
                 iconSize: [40, 50],
-                iconAnchor: [20, 25]
+                iconAnchor: [20, 50]
             }),
             onDragEnd: function (event) {
                 console.log("Marker dragged to:", event.target.getLatLng());
@@ -511,41 +445,22 @@
 
             const image = `<img src="${imagePath}" style="width: 40px; height: 48px;">`
 
-            console.log('e.target', e.target);
-
-            const targetDiv = e.target
-
-            if (targetDiv.id && targetDiv.id === "map") {
-
-                const marker = L.customMarker(coordinates, {
-                    draggable: true,
-                    rotationAngle: 0,
-                    icon: L.divIcon({
-                        className: 'my-div-icon',
-                        html: `
-                            <div class="markers-icons-div">
-                                <div class="marker-icon-wrapper">
-                                    ${image}
-                                </div>
-                            </div>
-                        `,
-                        iconSize: [40, 50],
-                        iconAnchor: [20, 25]
-                    }),
-                    onDragEnd: function (event) {
-                        console.log("Marker dragged to:", event.target.getLatLng());
-                    },
-                    onDelete: function () {
-                        console.log("Marker deleted");
-                    }
-                }).addTo(map);
-            }
-
-            if (targetDiv.parentElement.className.includes("leaflet-marker-icon")) {
-
-                console.log('MArker',);
-
-            }
+            const marker = L.customMarker(coordinates, {
+                draggable: true,
+                rotationAngle: 0,
+                icon: L.divIcon({
+                    className: 'my-div-icon',
+                    html: image,
+                    iconSize: [40, 50],
+                    iconAnchor: [20, 50]
+                }),
+                onDragEnd: function (event) {
+                    console.log("Marker dragged to:", event.target.getLatLng());
+                },
+                onDelete: function () {
+                    console.log("Marker deleted");
+                }
+            }).addTo(map);
 
         }
     </script>
