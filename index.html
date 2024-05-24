@@ -466,10 +466,12 @@
         };
 
         const map = L.map('map').setView({ lat: 51.97726758181177, lng: 5.661392211914063 }, 11);
-        const tiles = L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png', {
+
+        L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution: 'Kaartgegevens &copy; <a href="https://www.kadaster.nl">Kadaster</a>'
         }).addTo(map);
+
 
         const marker = L.customMarker([52, 5.66], {
             draggable: true,
