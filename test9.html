@@ -341,8 +341,8 @@
                     this._icon.querySelector('.markers-icons-div').appendChild(container);
 
 
-                    function rebuildIcons(){
-                       
+                    function rebuildIcons() {
+
                     }
 
                     function dropHandler(event) {
@@ -585,14 +585,12 @@
                 img.src = icon.path;
                 img.style = `width: ${icon.width}px; height: ${icon.height}px;`;
                 img.ondragstart = function (e) {
-
                     e.dataTransfer.setData('application/json', JSON.stringify({
                         name: icon.name,
                         path: icon.path,
                         width: icon.width,
                         height: icon.height
                     }));
-
                 }
                 div.appendChild(img);
                 iconsContainer.appendChild(div);
