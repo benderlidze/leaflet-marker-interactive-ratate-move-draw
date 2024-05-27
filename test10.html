@@ -94,24 +94,28 @@
         const iconsContainer = document.getElementById('icons-container');
         const icons = [
             {
+                id: "12030",
                 name: 'Speed_limit_50_sign',
                 path: 'icons/Speed_limit_50_sign.png',
                 width: 40,
                 height: 48
             },
             {
+                id: "12031",
                 name: 'Stop_sign',
                 path: 'icons/Stop_sign.png',
                 width: 50,
                 height: 50
             },
             {
+                id: "12032",
                 name: 'Speed_Limit_50',
                 path: 'icons/Speed_Limit_50.png',
                 width: 60,
                 height: 60
             },
             {
+                id: "12033",
                 name: 'fence',
                 path: 'icons/fence.png',
                 width: 64,
@@ -346,12 +350,14 @@
                     if (runOnce === false) {
                         console.log('1111', 1111);
                         runOnce = true;
-                        buildIcons.call(this);
+                        rebuildIcons.call(this);
                     }
 
-                    function buildIcons() {
+                    function rebuildIcons() {
 
                         console.log('this.options', this.options);
+
+
 
 
                         const iconsArray = this.options.iconsArray;
@@ -362,41 +368,68 @@
                         div.className = 'markers-icons-div';
 
                         let height;
-                        iconsArray.forEach(iconItem => {
+                        iconsArray
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .forEach(iconItem => {
 
-                            const wrapper = document.createElement('div');
-                            wrapper.className = 'marker-icon-wrapper';
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'marker-icon-wrapper';
 
-                            const deleteContainer = document.createElement('div');
-                            deleteContainer.style = 'position:relative;';
+                                const deleteContainer = document.createElement('div');
+                                deleteContainer.style = 'position:relative;';
+                                const buttonsContainer = document.createElement('div');
+                                buttonsContainer.style = 'position: absolute; top:50%; transform: translate(50%, 50%); left:35px; display:flex; gap:4px; flex-direction:row;';
 
-                            const deleteButton = document.createElement('div');
-                            deleteButton.innerHTML = 'X';
-                            deleteButton.style = 'position: absolute; top:50%; transform: translate(50%, 50%); left:65px; border-radius:5px; background-color:red;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
-                            deleteButton.addEventListener('click', (e) => {
-                                this.options.iconsArray.splice(this.options.iconsArray.findIndex(item => item.path === iconItem.path), 1);
-                                buildIcons.call(this);
-                            });
+                                const deleteButton = document.createElement('div');
+                                deleteButton.innerHTML = 'X';
+                                deleteButton.style = ' border-radius:5px; background-color:red;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                deleteButton.addEventListener('click', (e) => {
+                                    this.options.iconsArray.splice(this.options.iconsArray.findIndex(item => item.path === iconItem.path), 1);
+                                    rebuildIcons.call(this);
+                                });
 
-                            height = iconItem.height;
-                            wrapper.style.height = iconItem.height + 'px';
+                                const upButton = document.createElement('div');
+                                upButton.innerHTML = '^';
+                                upButton.style = ' border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                upButton.addEventListener('click', (e) => {
 
-                            const img = document.createElement('img');
-                            img.src = iconItem.path;
-                            img.style = `width: ${iconItem.width}px; height: ${iconItem.height}px;`;
-                            img.className = "marker-icon";
+                                    const item = this.options.iconsArray.find(item => item.id === iconItem.id);
+                                    console.log('item', item);
+                                    item.sortOrder = item.sortOrder + 1;
+                                    rebuildIcons.call(this);
 
-                            if (this.options.iconsArray.length > 1) {
-                                deleteContainer.appendChild(deleteButton);
-                            }
+                                });
 
-                            wrapper.appendChild(deleteContainer);
-                            wrapper.appendChild(img);
+                                const downButton = document.createElement('div');
+                                downButton.innerHTML = 'v';
+                                downButton.style = ' border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                downButton.addEventListener('click', (e) => {
+                                    const item = this.options.iconsArray.find(item => item.id === iconItem.id);
+                                    console.log('item', item);
+                                    item.sortOrder = item.sortOrder - 1;
+                                    rebuildIcons.call(this);
+                                });
 
-                            div.prepend(wrapper);
+                                height = iconItem.height;
+                                wrapper.style.height = iconItem.height + 'px';
 
-                            allWidth.push(iconItem.width);
-                        })
+                                const img = document.createElement('img');
+                                img.src = iconItem.path;
+                                img.style = `width: ${iconItem.width}px; height: ${iconItem.height}px;`;
+                                img.className = "marker-icon";
+
+                                if (this.options.iconsArray.length > 1) {
+                                    buttonsContainer.appendChild(deleteButton);
+                                    buttonsContainer.appendChild(upButton);
+                                    buttonsContainer.appendChild(downButton);
+                                    deleteContainer.appendChild(buttonsContainer);
+                                    wrapper.appendChild(deleteContainer);
+                                }
+
+                                wrapper.appendChild(img);
+                                div.prepend(wrapper);
+                                allWidth.push(iconItem.width);
+                            })
 
                         div.appendChild(container);
 
@@ -412,20 +445,28 @@
                         }));
                     }
 
+                    function recalculateSortOrder() {
+                        this.options.iconsArray.forEach((item, index) => {
+                            item.sortOrder = index;
+                        });
+                    }
+
                     if (!dropHandlerInitialized) { //intit ONCE!
                         this._icon.addEventListener('drop', (event) => {
                             event.preventDefault();
                             event.stopPropagation();
                             const transferedData = event.dataTransfer.getData("application/json")
-                            const { name, path, width, height } = JSON.parse(transferedData)
+                            const { id, name, path, width, height } = JSON.parse(transferedData)
 
                             this.options.iconsArray.push({
+                                id: id,
+                                sortOrder: this.options.iconsArray.length + 1,
                                 path: path,
                                 width: width,
                                 height: height
                             });
 
-                            buildIcons.call(this);
+                            rebuildIcons.call(this);
                         });
                         dropHandlerInitialized = true;
                     }
@@ -553,13 +594,13 @@
             e.preventDefault()
 
             const transferedData = e.dataTransfer.getData("application/json")
-            const { name, path: imagePath, width, height } = JSON.parse(transferedData)
+            const { id, name, path, width, height } = JSON.parse(transferedData)
 
             const val = target.getBoundingClientRect();
             const { x, y } = val;
             const coordinates = map.containerPointToLatLng(L.point([e.clientX - x, e.clientY - y]))
 
-            const image = `<img src="${imagePath}" style="width:${width}px; height: ${height}px">`
+            const image = `<img src="${path}" style="width:${width}px; height: ${height}px">`
 
             console.log('e.target', e.target);
 
@@ -567,17 +608,16 @@
 
             if (targetDiv.id && targetDiv.id === "map") {
 
-                console.log('width', width, height);
                 const marker = L.customMarker(coordinates, {
                     draggable: true,
                     rotationAngle: 0,
-
                     iconsArray: [{
-                        path: imagePath,
+                        id: 1,
+                        sortOrder: 1,
+                        path: path,
                         width: width,
                         height: height
                     }],
-
                     onDragEnd: function (event) {
                         console.log("Marker dragged to:", event.target.getLatLng());
                     },
@@ -603,6 +643,7 @@
                 img.style = `width: ${icon.width}px; height: ${icon.height}px;`;
                 img.ondragstart = function (e) {
                     e.dataTransfer.setData('application/json', JSON.stringify({
+                        id: icon.id,
                         name: icon.name,
                         path: icon.path,
                         width: icon.width,
