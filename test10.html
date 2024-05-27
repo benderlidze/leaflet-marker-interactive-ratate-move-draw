@@ -371,7 +371,6 @@
                         iconsArray
                             .sort((a, b) => a.sortOrder - b.sortOrder)
                             .forEach(iconItem => {
-
                                 const wrapper = document.createElement('div');
                                 wrapper.className = 'marker-icon-wrapper';
 
@@ -382,7 +381,7 @@
 
                                 const deleteButton = document.createElement('div');
                                 deleteButton.innerHTML = 'X';
-                                deleteButton.style = ' border-radius:5px; background-color:red;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                deleteButton.style = 'border-radius:5px; background-color:red;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
                                 deleteButton.addEventListener('click', (e) => {
                                     this.options.iconsArray.splice(this.options.iconsArray.findIndex(item => item.path === iconItem.path), 1);
                                     rebuildIcons.call(this);
@@ -390,24 +389,30 @@
 
                                 const upButton = document.createElement('div');
                                 upButton.innerHTML = '^';
-                                upButton.style = ' border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                upButton.style = 'border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
                                 upButton.addEventListener('click', (e) => {
-
                                     const item = this.options.iconsArray.find(item => item.id === iconItem.id);
-                                    console.log('item', item);
-                                    item.sortOrder = item.sortOrder + 1;
-                                    rebuildIcons.call(this);
-
+                                    const currentIndex = this.options.iconsArray.indexOf(item);
+                                    if (currentIndex < this.options.iconsArray.length - 1) {
+                                        const nextItem = this.options.iconsArray[currentIndex + 1];
+                                        // Swap sortOrder
+                                        [item.sortOrder, nextItem.sortOrder] = [nextItem.sortOrder, item.sortOrder];
+                                        rebuildIcons.call(this);
+                                    }
                                 });
 
                                 const downButton = document.createElement('div');
                                 downButton.innerHTML = 'v';
-                                downButton.style = ' border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                downButton.style = 'border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
                                 downButton.addEventListener('click', (e) => {
                                     const item = this.options.iconsArray.find(item => item.id === iconItem.id);
-                                    console.log('item', item);
-                                    item.sortOrder = item.sortOrder - 1;
-                                    rebuildIcons.call(this);
+                                    const currentIndex = this.options.iconsArray.indexOf(item);
+                                    if (currentIndex > 0) {
+                                        const previousItem = this.options.iconsArray[currentIndex - 1];
+                                        // Swap sortOrder
+                                        [item.sortOrder, previousItem.sortOrder] = [previousItem.sortOrder, item.sortOrder];
+                                        rebuildIcons.call(this);
+                                    }
                                 });
 
                                 height = iconItem.height;
@@ -429,7 +434,8 @@
                                 wrapper.appendChild(img);
                                 div.prepend(wrapper);
                                 allWidth.push(iconItem.width);
-                            })
+                            });
+
 
                         div.appendChild(container);
 
