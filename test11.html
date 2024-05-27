@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quick Start - Leaflet</title>
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .button {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+            user-select: none;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        #main-container {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+        }
+
+        #icons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: white;
+        }
+
+        .icon {
+            border: 1px solid black;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .red {
+            background-color: red;
+            color: white;
+        }
+
+        .popupCustom>.leaflet-popup-content-wrapper {
+            background: none;
+            box-shadow: none;
+        }
+
+        .popupCustom>.leaflet-popup-tip-container {
+            display: none;
+        }
+
+        .markers-icons-div {
+            border-bottom: 4px solid blue;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            /* width: fit-content; */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="main-container">
+        <div id="map" style="width: 700px; height: 100vh;"></div>
+        <div id="icons-container"></div>
+    </div>
+
+
+    <script>
+
+        const iconsContainer = document.getElementById('icons-container');
+        const icons = [
+            {
+                id: "12030",
+                name: 'Speed_limit_50_sign',
+                path: 'icons/Speed_limit_50_sign.png',
+                width: 40,
+                height: 48
+            },
+            {
+                id: "12031",
+                name: 'Stop_sign',
+                path: 'icons/Stop_sign.png',
+                width: 50,
+                height: 50
+            },
+            {
+                id: "12032",
+                name: 'Speed_Limit_50',
+                path: 'icons/Speed_Limit_50.png',
+                width: 60,
+                height: 60
+            },
+            {
+                id: "12033",
+                name: 'fence',
+                path: 'icons/fence.png',
+                width: 64,
+                height: 51
+            },
+            {
+                id: "12033",
+                name: 'fence',
+                path: 'data:image/jpeg;base64,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',
+                width: 64,
+                height: 51
+            }
+        ]
+
+        L.Polyline = L.Polyline.include({
+            getDistance: function (system) {
+                // distance in meters
+                var mDistanse = 0,
+                    length = this._latlngs.length;
+                for (var i = 1; i < length; i++) {
+                    mDistanse += this._latlngs[i].distanceTo(this._latlngs[i - 1]);
+                }
+                return mDistanse;
+            }
+        });
+
+        L.customMarker = function (latlng, options) {
+            // save these original methods before they are overwritten
+            var proto_initIcon = L.Marker.prototype._initIcon;
+            var proto_setPos = L.Marker.prototype._setPos;
+            var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
+            let polyline = null;
+            let arrow = null;
+            let dropHandlerInitialized = false;
+            let runOnce = false;
+
+            const markerProps = {
+                position: latlng,
+                angle: 0,
+                icons: [],
+                line: null,
+            }
+
+            function bearing(from, to) {
+                let [lat1, lon1] = from
+                let [lat2, lon2] = to
+                const radians = Math.PI / 180;
+                lat1 *= radians;
+                lon1 *= radians;
+                lat2 *= radians;
+                lon2 *= radians;
+                const deltaLon = lon2 - lon1;
+                const y = Math.sin(deltaLon) * Math.cos(lat2);
+                const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+                let bearing = Math.atan2(y, x);
+                // Convert from radians to degrees
+                bearing = (bearing + 2 * Math.PI) % (2 * Math.PI);
+                bearing = bearing * 180 / Math.PI;
+                return bearing + 180;
+            }
+
+            function degreesToRadians(degrees) {
+                return degrees * Math.PI / 180;
+            }
+
+            const CustomMarker = L.Marker.extend({
+                options: {
+                    rotationOrigin: 'center bottom',
+                    rotationAngle: 0,
+                    draggingAll: false,
+
+                    onDragEnd: function () { },
+                    onDelete: function () { },
+                    onMarkerInteractive: function () {
+                    }
+                },
+
+                initialize: function (latlng, options) {
+                    L.Marker.prototype.initialize.call(this, latlng, options);
+                    this.options = L.Util.extend(this.options, options);
+                },
+
+                onAdd: function (map) {
+                    L.Marker.prototype.onAdd.call(this, map);
+
+                    let { lat, lng } = this.getLatLng();
+                    let lat1 = lat - 0.000001;
+                    let lng1 = lng;
+
+                    const polylinePoints = [
+                        [lat, lng],
+                        [lat1, lng1]
+                    ];
+
+                    polyline = L.polyline(polylinePoints, {
+                        color: 'blue',
+                        weight: 3,
+                        opacity: 1,
+                        smoothFactor: 1
+                    }).addTo(map);
+
+                    console.log('polyline', polyline);
+
+                    const angle = bearing([lat, lng], [lat1, lng1]);
+                    console.log('angle', angle);
+
+                    arrow = L.marker([lat1, lng1], {
+                        icon: L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/circle.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                            iconAnchor: [7, 7]
+                        }),
+                        draggable: true,
+                    }).addTo(map);
+
+                    arrow.on('drag', function (e) {
+                        lat1 = this.getLatLng().lat;
+                        lng1 = this.getLatLng().lng;
+                        polyline.setLatLngs([
+                            [lat, lng],
+                            [lat1, lng1]
+                        ]);
+                    });
+
+                    arrow.on('dragend', function (e) {
+                        lat1 = this.getLatLng().lat;
+                        lng1 = this.getLatLng().lng;
+                        polyline.setLatLngs([
+                            [lat, lng],
+                            [lat1, lng1]
+                        ]);
+                    });
+
+                    this.on('drop', function (e) {
+                        console.log('DROP', e);
+                    });
+
+
+                    this.on('drag', function (e) {
+
+                        e.target._applyRotation();
+                        //update polyline
+                        lat = this.getLatLng().lat;
+                        lng = this.getLatLng().lng;
+
+                        if (this.options.draggingAll) {
+                            lat1 = lat;
+                            lng1 = lng;
+                        }
+
+                        polyline.setLatLngs([
+                            [lat, lng],
+                            [lat1, lng1]
+                        ]);
+
+                        const angle = bearing([lat, lng], [lat1, lng1])
+                        arrow.setLatLng([lat1, lng1]);
+                        // arrow.setIcon(L.divIcon({
+                        //     className: 'my-div-icon',
+                        //     html: `<img src="icons/circle.svg" style="transform:rotate(${angle}deg);width: 14px; height: 14px;">`,
+                        //     iconSize: [14, 14],
+                        // }));
+                    });
+
+                    this.on('dragend', function (e) {
+                        markerProps.position = this.getLatLng();
+                        this.options.onMarkerInteractive(markerProps);
+                    });
+                },
+
+
+                _initIcon: function () {
+
+                    console.log('_initIcon!!!!!!!!!!!!!!', this);
+
+                    proto_initIcon.call(this);
+
+                    const container = document.createElement('div');
+                    container.className = 'actions-container';
+                    container.style = 'display:flex; flex-direction: row; position:absolute; top: -30px;  transform: translate(-50%, 0px); left: 50%; gap:4px;';
+                    const moveButton = document.createElement('button');
+                    moveButton.className = 'button';
+                    moveButton.innerHTML = '<img src="icons/move.svg" style="width:100%;height:100%">';
+                    moveButton.addEventListener('mousedown', function (event) {
+                        this.options.draggingAll = true;
+                        this._updateArrowAngle(event);
+                    }.bind(this));
+                    moveButton.addEventListener('mouseup', function (event) {
+                        this.options.draggingAll = false;
+                        this._updateArrowAngle(event);
+                    }.bind(this));
+
+
+                    const rotateButton = document.createElement('button');
+                    rotateButton.className = 'button ';
+                    rotateButton.innerHTML = '<img src="icons/rotate.svg" style="width:100%;height:100%">';
+                    rotateButton.addEventListener('mousedown', this._handleRotation.bind(this));
+
+                    const editButton = document.createElement('button');
+                    editButton.className = 'button';
+                    editButton.innerHTML = 'E';
+                    editButton.addEventListener('click', function (e) {
+
+                    }.bind(this));
+
+                    const closeButton = document.createElement('button');
+                    closeButton.className = 'button red';
+                    closeButton.innerHTML = 'X';
+                    closeButton.addEventListener('click', function (e) {
+                        this.options.onDelete();
+                        polyline.remove()
+                        arrow.remove()
+                        this.remove()
+                    }.bind(this));
+
+                    container.appendChild(rotateButton);
+                    container.appendChild(closeButton);
+
+                    this._icon.addEventListener('click', function (event) {
+
+                        console.log('CLICK', container);
+                        if (container.style.display === 'none') {
+                            container.style.display = 'flex';
+                        }
+                        event.stopPropagation();
+                    });
+
+
+                    if (runOnce === false) {
+                        console.log('1111', 1111);
+                        runOnce = true;
+                        rebuildIcons.call(this);
+
+                        //catch click event outside  the container
+                        document.addEventListener('click', function (e) {
+                            console.log('OUT CLICK',);
+                            if (!container.contains(e.target)) {
+                                container.style.display = 'none';
+                            }
+                        });
+                    }
+
+                    function rebuildIcons() {
+
+                        console.log('this.options', this.options);
+
+                        const iconsArray = this.options.iconsArray;
+
+                        const allWidth = []
+
+                        const div = document.createElement('div');
+                        div.className = 'markers-icons-div';
+
+                        let height;
+                        iconsArray
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .forEach(iconItem => {
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'marker-icon-wrapper';
+
+                                const deleteContainer = document.createElement('div');
+                                deleteContainer.style = 'position:relative;';
+                                const buttonsContainer = document.createElement('div');
+                                buttonsContainer.style = 'position: absolute; top:50%; transform: translate(50%, 50%); left:35px; display:flex; gap:4px; flex-direction:row;';
+
+                                const deleteButton = document.createElement('div');
+                                deleteButton.innerHTML = 'X';
+                                deleteButton.style = 'border-radius:5px; background-color:red;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                deleteButton.addEventListener('click', (e) => {
+                                    this.options.iconsArray.splice(this.options.iconsArray.findIndex(item => item.path === iconItem.path), 1);
+                                    rebuildIcons.call(this);
+                                });
+
+                                const upButton = document.createElement('div');
+                                upButton.innerHTML = '^';
+                                upButton.style = 'border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                upButton.addEventListener('click', (e) => {
+                                    const item = this.options.iconsArray.find(item => item.id === iconItem.id);
+                                    const currentIndex = this.options.iconsArray.indexOf(item);
+                                    if (currentIndex < this.options.iconsArray.length - 1) {
+                                        const nextItem = this.options.iconsArray[currentIndex + 1];
+                                        // Swap sortOrder
+                                        [item.sortOrder, nextItem.sortOrder] = [nextItem.sortOrder, item.sortOrder];
+                                        rebuildIcons.call(this);
+                                    }
+                                });
+
+                                const downButton = document.createElement('div');
+                                downButton.innerHTML = 'v';
+                                downButton.style = 'border-radius:5px; background-color:blue;color:white;width:20px;height:20px;display:flex;justify-content:center;align-items:center;cursor:pointer;';
+                                downButton.addEventListener('click', (e) => {
+                                    const item = this.options.iconsArray.find(item => item.id === iconItem.id);
+                                    const currentIndex = this.options.iconsArray.indexOf(item);
+                                    if (currentIndex > 0) {
+                                        const previousItem = this.options.iconsArray[currentIndex - 1];
+                                        // Swap sortOrder
+                                        [item.sortOrder, previousItem.sortOrder] = [previousItem.sortOrder, item.sortOrder];
+                                        rebuildIcons.call(this);
+                                    }
+                                });
+
+                                height = iconItem.height;
+                                wrapper.style.height = iconItem.height + 'px';
+
+                                const img = document.createElement('img');
+                                img.src = iconItem.path;
+                                img.style = `width: ${iconItem.width}px; height: ${iconItem.height}px;`;
+                                img.className = "marker-icon";
+
+                                if (this.options.iconsArray.length > 1) {
+                                    buttonsContainer.appendChild(deleteButton);
+                                    buttonsContainer.appendChild(upButton);
+                                    buttonsContainer.appendChild(downButton);
+                                    deleteContainer.appendChild(buttonsContainer);
+                                    wrapper.appendChild(deleteContainer);
+                                }
+
+                                wrapper.appendChild(img);
+                                div.prepend(wrapper);
+                                allWidth.push(iconItem.width);
+                            });
+
+
+                        div.appendChild(container);
+
+                        div.addEventListener('click', function (event) {
+                            console.log('CLICK', container);
+                            if (container.style.display === 'none') {
+                                container.style.display = 'flex';
+                            }
+                            event.stopPropagation();
+                        });
+
+                        const heightWithBorder = height + 2;
+                        div.style = `transform: translateY(calc(-100% + ${heightWithBorder}px)); display:flex; flex-direction:column;`;
+                        const maxWidth = Math.max(...allWidth);
+
+                        this.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: div,
+                            iconSize: [maxWidth, height],
+                            iconAnchor: [maxWidth / 2, height]
+                        }));
+                    }
+
+                    function recalculateSortOrder() {
+                        this.options.iconsArray.forEach((item, index) => {
+                            item.sortOrder = index;
+                        });
+                    }
+
+                    if (!dropHandlerInitialized) { //intit ONCE!
+                        this._icon.addEventListener('drop', (event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const transferedData = event.dataTransfer.getData("application/json")
+                            const { id, name, path, width, height } = JSON.parse(transferedData)
+
+                            this.options.iconsArray.push({
+                                id: id,
+                                sortOrder: this.options.iconsArray.length + 1,
+                                path: path,
+                                width: width,
+                                height: height
+                            });
+
+                            rebuildIcons.call(this);
+                        });
+                        dropHandlerInitialized = true;
+                    }
+
+                },
+
+                _iconCenterLatLng: function (icon) {
+                    const iconCenter = icon.getBoundingClientRect();
+                    const iconCenterX = iconCenter.left + iconCenter.width / 2;
+                    const iconCenterY = iconCenter.top + iconCenter.height / 2;
+                    const pointXY = L.point(iconCenterX, iconCenterY);
+                    const pointlatlng = map.layerPointToLatLng(pointXY);
+                    return pointlatlng;
+                },
+
+                _updateArrowAngle: function (event) {
+
+                    console.log('_updateArrowAngle!!!',);
+                    //update arrow angle
+                    const marker = this;
+                    const initIconAngle = this.options.rotationAngle;
+                    const rect = marker._icon.getBoundingClientRect();
+                    const center = {
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2
+                    };
+                    const initialAngle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+                    const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+                    const rotationAngle = angle + initIconAngle - initialAngle;
+                    if (polyline && polyline.getDistance() < 2) {
+                        arrow.setIcon(L.divIcon({
+                            className: 'my-div-icon',
+                            html: `<img src="icons/circle.svg" style="transform:rotate(${rotationAngle}deg);width: 14px; height: 14px;">`,
+                            iconSize: [14, 14],
+                        }));
+                    }
+                },
+
+                _setPos: function (pos) {
+                    proto_setPos.call(this, pos);
+                    this._applyRotation();
+                },
+
+                _applyRotation: function () {
+                    if (this.options.rotationAngle) {
+                        this._icon.style[L.DomUtil.TRANSFORM + 'Origin'] = this.options.rotationOrigin;
+
+                        if (oldIE) {
+                            // for IE 9, use the 2D rotation
+                            this._icon.style[L.DomUtil.TRANSFORM] = 'rotate(' + this.options.rotationAngle + 'deg)';
+                        } else {
+                            // for modern browsers, prefer the 3D accelerated version
+                            this._icon.style[L.DomUtil.TRANSFORM] += ' rotateZ(' + this.options.rotationAngle + 'deg)';
+                        }
+                    }
+                },
+
+                _handleRotation: function (event) {
+
+                    console.log('rotation', event);
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const marker = this;
+                    const initIconAngle = this.options.rotationAngle;
+
+                    // Calculate initial rotation angle based on the difference between mouse position and marker center
+                    const rect = marker._icon.getBoundingClientRect();
+                    const center = {
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2
+                    };
+                    const initialAngle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+
+                    function handleMouseMove(event) {
+                        const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x) * (180 / Math.PI);
+                        const rotationAngle = angle + initIconAngle - initialAngle;
+                        marker.setRotationAngle(rotationAngle);
+                    }
+
+                    const stopRotation = () => {
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        window.removeEventListener('mouseup', stopRotation);
+
+                        console.log('stop', this);
+                        this.options.onMarkerInteractive(markerProps);
+                    }
+                    document.addEventListener('mousemove', handleMouseMove);
+                    window.addEventListener('mouseup', stopRotation);
+                },
+
+                setRotationAngle: function (angle) {
+                    this.options.rotationAngle = angle;
+                    markerProps.angle = angle;
+                    this.update();
+                    return this;
+                },
+
+                setRotationOrigin: function (origin) {
+                    this.options.rotationOrigin = origin;
+                    this.update();
+                    return this;
+                }
+            });
+
+            return new CustomMarker(latlng, options);
+        };
+
+        const map = L.map('map').setView({ lat: 51.97726758181177, lng: 5.661392211914063 }, 11);
+
+        L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'Kaartgegevens &copy; <a href="https://www.kadaster.nl">Kadaster</a>'
+        }).addTo(map);
+
+
+        const target = document.getElementById("map")
+        target.ondragover = function (e) {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = "move"
+        }
+
+        target.ondrop = function (e) {
+            e.preventDefault()
+
+            const transferedData = e.dataTransfer.getData("application/json")
+            const { id, name, path, width, height } = JSON.parse(transferedData)
+
+            const val = target.getBoundingClientRect();
+            const { x, y } = val;
+            const coordinates = map.containerPointToLatLng(L.point([e.clientX - x, e.clientY - y]))
+
+            const image = `<img src="${path}" style="width:${width}px; height: ${height}px">`
+
+            console.log('e.target', e.target);
+
+            const targetDiv = e.target
+
+            if (targetDiv.id && targetDiv.id === "map") {
+
+                const marker = L.customMarker(coordinates, {
+                    draggable: true,
+                    rotationAngle: 0,
+                    iconsArray: [{
+                        id: 1,
+                        sortOrder: 1,
+                        path: path,
+                        width: width,
+                        height: height
+                    }],
+                    onDragEnd: function (event) {
+                        console.log("Marker dragged to:", event.target.getLatLng());
+                    },
+                    onDelete: function () {
+                        console.log("Marker deleted");
+                    }
+                }).addTo(map);
+            }
+
+            if (targetDiv.parentElement.className.includes("leaflet-marker-icon")) {
+                console.log('MArker',);
+            }
+        }
+
+
+        buildIconsContainer()
+        function buildIconsContainer() {
+            icons.forEach(icon => {
+                const div = document.createElement('div');
+                div.className = 'icon';
+                const img = document.createElement('img');
+                img.src = icon.path;
+                img.style = `width: ${icon.width}px; height: ${icon.height}px;`;
+                img.ondragstart = function (e) {
+                    e.dataTransfer.setData('application/json', JSON.stringify({
+                        id: icon.id,
+                        name: icon.name,
+                        path: icon.path,
+                        width: icon.width,
+                        height: icon.height
+                    }));
+                }
+                div.appendChild(img);
+                iconsContainer.appendChild(div);
+            })
+        }
+    </script>
+</body>
+
+</html>
