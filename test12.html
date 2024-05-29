@@ -380,10 +380,9 @@
 
                     function rebuildIcons() {
 
-                        console.log('this.options', this.options);
 
+                        const zoom = map.getZoom();
                         const iconsArray = this.options.iconsArray;
-
                         const allWidth = []
 
                         const div = document.createElement('div');
@@ -437,13 +436,24 @@
                                     }
                                 });
 
-                                height = iconItem.height;
-                                wrapper.style.height = iconItem.height + 'px';
+
+                                const resizeFactor = zoom * 0.05;
+                                const _width = Math.ceil(iconItem.width * resizeFactor);
+                                const _height = Math.ceil(iconItem.height * resizeFactor);
+
+                                height = _height;
+                                wrapper.style.height = _height + 'px';
+
+                                //resize in %  icon size based on zoom level
+
+
 
                                 const img = document.createElement('img');
                                 img.src = iconItem.path;
-                                img.style = `width: ${iconItem.width}px; height: ${iconItem.height}px;`;
+                                img.style = `width: ${_width}px; height: ${_height}px;`;
                                 img.className = "marker-icon";
+
+
 
                                 if (this.options.iconsArray.length > 1) {
                                     buttonsContainer.appendChild(deleteButton);
@@ -455,7 +465,7 @@
 
                                 wrapper.appendChild(img);
                                 div.prepend(wrapper);
-                                allWidth.push(iconItem.width);
+                                allWidth.push(_width);
                             });
 
 
@@ -465,7 +475,7 @@
                         border.style = `display:block; width: ${maxWidth}px; height: 4px; border-bottom: 4px solid blue;  `
 
                         const vercticalLine = document.createElement('div');
-                        vercticalLine.style = 'width: 30px; height: 30px; border-left: 3px solid blue; transform: translate(calc(50% - 2px), 0px);';
+                        vercticalLine.style = 'width: 30px; height: 20px; border-left: 3px solid blue; transform: translate(calc(50% - 2px), 0px);';
 
 
                         div.appendChild(border);
@@ -515,8 +525,12 @@
                             rebuildIcons.call(this);
                         });
                         dropHandlerInitialized = true;
-                    }
 
+                        //add zoom end evebt 
+                        map.on('zoomend', function () {
+                            rebuildIcons.call(this);
+                        }.bind(this));
+                    }
                 },
 
                 _iconCenterLatLng: function (icon) {
