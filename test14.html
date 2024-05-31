@@ -316,20 +316,14 @@
 
                 _initIcon: function () {
 
-                    console.log('_initIcon!!!!!!!!!!!!!!', this);
-
                     proto_initIcon.call(this);
 
                     if (runOnce === false) {
                         runOnce = true;
-
                         rebuildIcons.call(this);
-
                         //catch click event outside  the container
                         document.addEventListener('click', function (e) {
                             console.log('OUT CLICK', container);
-                            console.log('iconsContainers EVENT', iconsContainers);
-
                             if (!container.contains(e.target)) {
                                 container.style.display = 'none';
 
@@ -344,7 +338,6 @@
 
                     function rebuildIcons() {
 
-                        console.log('rebuildIcons');
                         iconsContainers.length = 0
 
                         const zoom = map.getZoom();
@@ -459,9 +452,6 @@
 
                                 iconsContainers.push(deleteContainer)
                             });
-
-                        console.log('iconsContainers===>>>', iconsContainers);
-
 
                         const maxWidth = Math.max(...allWidth);
 
@@ -708,7 +698,6 @@
                 console.log("Marker action", props);
             },
         }).addTo(map);
-
 
 
         buildIconsContainer()
