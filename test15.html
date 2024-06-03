@@ -314,6 +314,11 @@
 
                 },
 
+                remove: function () {
+                    L.Marker.prototype.remove.call(this);
+                    polyline.remove();
+                    arrow.remove();
+                },
 
                 _initIcon: function () {
 
