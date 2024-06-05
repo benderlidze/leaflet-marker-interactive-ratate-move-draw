@@ -8,7 +8,6 @@
     <title>Leaflet Polyline Decorator example</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.css" />
-
     <style>
         * {
             margin: 0;
@@ -46,10 +45,10 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js_custom/leaflet.polylineDecorator.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
 
 </head>
 
@@ -101,44 +100,43 @@
 
             var drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
+
             var drawControl = new L.Control.Draw({
                 draw: {
-                    polyline: true,  // Enable polyline drawing
-                    polygon: false,  // Disable polygon drawing
-                    circle: false,   // Disable circle drawing
-                    rectangle: false, // Disable rectangle drawing
-                    marker: false,   // Disable marker drawing
-                    circlemarker: false // Disable circle marker drawing
+                    polyline: true,
+                    polygon: false,
+                    circle: false,
+                    rectangle: false,
+                    marker: false,
+                    circlemarker: false
                 },
-                // edit: {
-                //     featureGroup: drawnItems
-                // }
+                edit: {
+                    featureGroup: drawnItems
+                }
             });
             map.addControl(drawControl);
 
             map.on(L.Draw.Event.CREATED, function (e) {
                 var type = e.layerType,
                     layer = e.layer;
-                layer.on('click', function (e) {
 
-                });
                 map.addLayer(layer);
                 drawnItems.addLayer(layer);
 
                 console.log('layer', layer);
-                //get line 
-                var latlngs = layer.getLatLngs();
 
+                var latlngs = layer.getLatLngs();
+                const line = drawIconLine(latlngs);
+                console.log('line', line);
 
                 styleSelector.style.display = 'flex';
-                buidStyleSelector(layer)
+                buildStyleSelector(line);
 
-
-                const bearing = turf.bearing(latlngs[0], latlngs[1]);
+                line.on('click', function () {
+                    enableEditing(line);
+                });
             });
 
-
-            // Handle the deleted event to remove the layers from the feature group
             map.on(L.Draw.Event.DELETED, function (event) {
                 var layers = event.layers;
                 layers.eachLayer(function (layer) {
@@ -146,7 +144,15 @@
                 });
             });
 
-            function buidStyleSelector(layer) {
+            function enableEditing(layer) {
+                if (layer.editing.enabled()) {
+                    layer.editing.disable();
+                } else {
+                    layer.editing.enable();
+                }
+            }
+
+            function buildStyleSelector(layer) {
                 const styleSelector = document.getElementById('style-selector');
                 styleSelector.innerHTML = '';
 
@@ -184,8 +190,8 @@
                 const input = document.createElement('input');
                 input.style = 'width: 50px;';
                 input.type = 'number';
-                input.min = 1;
-                input.value = 1;
+                input.min = 2;
+                input.value = 2;
                 input.addEventListener('change', function (e) {
                     iconNumber = e.target.value;
                     updateLineProps({ layer, icon, iconNumber });
@@ -196,7 +202,6 @@
 
                 styleSelector.appendChild(container);
                 styleSelector.appendChild(container2);
-
             }
 
             function updateLineProps({ layer, icon, iconNumber }) {
@@ -204,15 +209,93 @@
                 console.log('iconName', icon);
                 console.log('iconNumber', iconNumber);
 
-                const nums = 100 / (iconNumber - 1) + "%"
+                const nums = 100 / (iconNumber - 1) + "%";
                 console.log('nums', nums);
 
+                layer.setPatterns([
+                    {
+                        offset: '0%',
+                        repeat: nums,
+                        symbol: L.Symbol.marker({
+                            rotate: true,
+                            angleCorrection: 0,
+                            markerOptions: {
+                                icon: L.icon({
+                                    iconSize: [icon.height, icon.width],
+                                    iconUrl: icon.path,
+                                    iconAnchor: [icon.height / 2, icon.width / 2],
+                                })
+                            },
+                        })
+                    }
+                ]);
 
+                map.on('zoomend', function (e) {
+                    console.log('1', 1);
+
+                    const { height, width } = icon;
+                    const resizeFactor = map.getZoom() * 0.05;
+                    const _width = Math.ceil(width * resizeFactor);
+                    const _height = Math.ceil(height * resizeFactor);
+                    layer.setPatterns([
+                        {
+                            offset: '0%',
+                            repeat: nums,
+                            symbol: L.Symbol.marker({
+                                rotate: true,
+                                angleCorrection: 0,
+                                markerOptions: {
+                                    icon: L.icon({
+                                        iconSize: [_height, _width],
+                                        iconUrl: icon.path,
+                                        iconAnchor: [_height / 2, _width / 2],
+                                    })
+                                },
+                            })
+                        }
+                    ]);
+                });
             }
 
+            function drawIconLine(coordinates) {
+                console.log('coordinates', coordinates);
 
+                const markerLine = L.polyline(coordinates, {}).addTo(map);
+                const pathPattern = L.polylineDecorator(
+                    markerLine,
+                    {
+                        patterns: [
+                            { offset: "100%", repeat: 10, symbol: L.Symbol.dash({ pixelSize: 5, pathOptions: { color: '#000', weight: 1, opacity: 0.2 } }) },
+                            {
+                                offset: 1000, endOffset: -10, repeat: "50", symbol: L.Symbol.marker({
+                                    rotate: true,
+                                    angleCorrection: 0,
+                                    markerOptions: {
+                                        icon: L.icon({
+                                            iconSize: [30, 20],
+                                            iconUrl: 'icons/fence.png',
+                                            iconAnchor: [15, 10],
+                                        })
+                                    },
+                                })
+                            }
+                        ]
+                    }
+                ).addTo(map);
 
+                markerLine.on('click', function (e) {
+                    console.log('markerLine', markerLine);
+                    enableEditing(markerLine);
+                });
+
+                markerLine.on('remove', function (e) {
+                    map.removeLayer(pathPattern);
+                });
+
+                return pathPattern;
+            }
         }
+
     </script>
 </body>
 

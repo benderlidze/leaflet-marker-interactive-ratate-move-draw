@@ -47,8 +47,10 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="js_custom/leaflet.polylineDecorator.js"></script>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.17.0/dist/leaflet-geoman.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.17.0/dist/leaflet-geoman.css">
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6"></script>
+
 
 </head>
 
@@ -98,52 +100,61 @@
                 ]
             });
 
-            var drawnItems = new L.FeatureGroup();
-            map.addLayer(drawnItems);
-            var drawControl = new L.Control.Draw({
-                draw: {
-                    polyline: true,  // Enable polyline drawing
-                    polygon: false,  // Disable polygon drawing
-                    circle: false,   // Disable circle drawing
-                    rectangle: false, // Disable rectangle drawing
-                    marker: false,   // Disable marker drawing
-                    circlemarker: false // Disable circle marker drawing
-                },
-                // edit: {
-                //     featureGroup: drawnItems
-                // }
+            // add leaflet.pm controls to the map
+            map.pm.addControls({
+                position: 'topleft',
+                drawMarker: false,
+                drawCircleMarker: false,
+                drawPolygon: false,
+                drawLineString: true,
+                drawCircle: false,
+                drawPolyline: true,
+                drawRectangle: false,
+                drawText: false,
+                cutPolygon: false,
+                removalMode: false,
+                rotateMode: false,
+                dragMode: false,
+
             });
-            map.addControl(drawControl);
 
-            map.on(L.Draw.Event.CREATED, function (e) {
-                var type = e.layerType,
-                    layer = e.layer;
-                layer.on('click', function (e) {
-
-                });
-                map.addLayer(layer);
-                drawnItems.addLayer(layer);
-
-                console.log('layer', layer);
-                //get line 
-                var latlngs = layer.getLatLngs();
-                const line = drawIconLine(latlngs)
-                console.log('line', line);
-
-                styleSelector.style.display = 'flex';
-                buidStyleSelector(line)
+            map.on('pm:create', (e) => {
+                // const self_drawn = map.pm.getGeomanDrawLayers(true)
+                // const geojson = self_drawn.toGeoJSON()
+                // const coordinates = turf.getCoords(geojson.features[0]);
+                // e.layer.options.pmIgnore = true;
+                // L.PM.reInitLayer(e.layer);
+                // drawIconLine(coordinates)
             });
 
 
-            // Handle the deleted event to remove the layers from the feature group
-            map.on(L.Draw.Event.DELETED, function (event) {
-                var layers = event.layers;
-                layers.eachLayer(function (layer) {
-                    drawnItems.removeLayer(layer);
-                });
+            map.on('pm:create', ({ layer }) => {
+
+                if (layer instanceof L.Polyline) {
+                    const coordinates = layer.getLatLngs();
+                    drawIconLine(coordinates);
+                    layer.remove();
+                }
+
             });
 
-            function buidStyleSelector(layer) {
+            // map.on("pm:create", (e) => {
+
+            //     const self_drawn = map.pm.getGeomanDrawLayers(true)
+            //     const geojson = self_drawn.toGeoJSON()
+            //     console.log('geojson', geojson);
+            //     const coordinates = turf.getCoords(geojson);
+
+            //     console.log('coordinates', coordinates);
+
+            //     //drawIconLine(coordinates)
+
+            //     e.layer.options.pmIgnore = true;
+            //     L.PM.reInitLayer(e.layer);
+            // });
+
+
+            function buildStyleSelector(layer) {
                 const styleSelector = document.getElementById('style-selector');
                 styleSelector.innerHTML = '';
 
@@ -193,7 +204,6 @@
 
                 styleSelector.appendChild(container);
                 styleSelector.appendChild(container2);
-
             }
 
             function updateLineProps({ layer, icon, iconNumber }) {
@@ -201,7 +211,7 @@
                 console.log('iconName', icon);
                 console.log('iconNumber', iconNumber);
 
-                const nums = 100 / (iconNumber - 1) + "%"
+                const nums = 100 / (iconNumber - 1) + "%";
                 console.log('nums', nums);
 
                 layer.setPatterns([
@@ -210,7 +220,7 @@
                         repeat: nums,
                         symbol: L.Symbol.marker({
                             rotate: true,
-                            angleCorrection: -90,
+                            angleCorrection: 0,
                             markerOptions: {
                                 icon: L.icon({
                                     iconSize: [icon.height, icon.width],
@@ -219,15 +229,13 @@
                                 })
                             },
                         })
-                    },
+                    }
+                ]);
 
-                ])
-
-                //zoomend 
                 map.on('zoomend', function (e) {
                     console.log('1', 1);
 
-                    const { height, width } = icon
+                    const { height, width } = icon;
                     const resizeFactor = map.getZoom() * 0.05;
                     const _width = Math.ceil(width * resizeFactor);
                     const _height = Math.ceil(height * resizeFactor);
@@ -237,7 +245,7 @@
                             repeat: nums,
                             symbol: L.Symbol.marker({
                                 rotate: true,
-                                angleCorrection: -90,
+                                angleCorrection: 0,
                                 markerOptions: {
                                     icon: L.icon({
                                         iconSize: [_height, _width],
@@ -246,16 +254,15 @@
                                     })
                                 },
                             })
-                        },
-                    ])
+                        }
+                    ]);
                 });
             }
 
-
             function drawIconLine(coordinates) {
-                console.log('coordinates', coordinates);
+                console.log('coordinates===>>>', coordinates);
 
-                const markerLine = L.polyline([coordinates], {}).addTo(map);
+                const markerLine = L.polyline(coordinates, {}).addTo(map);
                 const pathPattern = L.polylineDecorator(
                     markerLine,
                     {
@@ -263,8 +270,9 @@
                             { offset: "100%", repeat: 10, symbol: L.Symbol.dash({ pixelSize: 5, pathOptions: { color: '#000', weight: 1, opacity: 0.2 } }) },
                             {
                                 offset: 1000, endOffset: -10, repeat: "50", symbol: L.Symbol.marker({
+                                    pmIgnore: true,
                                     rotate: true,
-                                    angleCorrection: -90,
+                                    angleCorrection: 0,
                                     markerOptions: {
                                         icon: L.icon({
                                             iconSize: [30, 20],
@@ -277,16 +285,17 @@
                         ]
                     }
                 ).addTo(map);
+
                 markerLine.on('click', function (e) {
                     console.log('markerLine', markerLine);
-                    // map.removeLayer(markerLine);
-                    // map.removeLayer(pathPattern);
-                    
+                    markerLine.options.pmIgnore = true;
+                    L.PM.reInitLayer(markerLine);
                 });
+
                 return pathPattern;
             }
-
         }
+
     </script>
 </body>
 
