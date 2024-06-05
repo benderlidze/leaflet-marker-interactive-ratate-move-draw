@@ -63,7 +63,7 @@
 
 
     <script>
-
+        const allLines = [];
         const styleSelector = document.getElementById('style-selector');
         const icons = [
             {
@@ -129,13 +129,22 @@
 
 
             map.on('pm:create', ({ layer }) => {
-
                 if (layer instanceof L.Polyline) {
                     const coordinates = layer.getLatLngs();
-                    drawIconLine(coordinates);
+
+                    const line = drawIconLine(coordinates);
+                    allLines.push(line)
+
                     layer.remove();
                 }
+            });
 
+            map.on("pm:globaleditmodetoggled", (e) => {
+                console.log(e);
+                allLines.forEach(({ markerLine }) => {
+                    markerLine.options.pmIgnore = true;
+                    L.PM.reInitLayer(markerLine);
+                });
             });
 
             // map.on("pm:create", (e) => {
@@ -262,37 +271,57 @@
             function drawIconLine(coordinates) {
                 console.log('coordinates===>>>', coordinates);
 
+                const { path, height, width } = icons[0];
                 const markerLine = L.polyline(coordinates, {}).addTo(map);
-                const pathPattern = L.polylineDecorator(
-                    markerLine,
-                    {
-                        patterns: [
-                            { offset: "100%", repeat: 10, symbol: L.Symbol.dash({ pixelSize: 5, pathOptions: { color: '#000', weight: 1, opacity: 0.2 } }) },
-                            {
-                                offset: 1000, endOffset: -10, repeat: "50", symbol: L.Symbol.marker({
-                                    pmIgnore: true,
-                                    rotate: true,
-                                    angleCorrection: 0,
-                                    markerOptions: {
-                                        icon: L.icon({
-                                            iconSize: [30, 20],
-                                            iconUrl: 'icons/fence.png',
-                                            iconAnchor: [15, 10],
-                                        })
-                                    },
-                                })
-                            }
-                        ]
-                    }
-                ).addTo(map);
+
+                markerLine.options.pmIgnore = true;
+                L.PM.reInitLayer(markerLine);
+
+                const patterns = [{
+                    offset: 0, endOffset: 0, repeat: "100%", symbol: L.Symbol.marker({
+                        draggable: false,
+                        pmIgnore: true,
+                        rotate: true,
+                        angleCorrection: 0,
+                        markerOptions: {
+                            pmIgnore: true,
+                            icon: L.icon({
+                                iconSize: [height, width],
+                                iconUrl: path,
+                                iconAnchor: [height / 2, width / 2],
+                                zIndexOffset: 10
+                            })
+                        },
+                    })
+                }]
+
+                let pathPattern = L.polylineDecorator(
+                    markerLine, {
+                    patterns
+                }).addTo(map);
 
                 markerLine.on('click', function (e) {
                     console.log('markerLine', markerLine);
-                    markerLine.options.pmIgnore = true;
-                    L.PM.reInitLayer(markerLine);
+                    // markerLine.options.pmIgnore = false;
+                    // L.PM.reInitLayer(markerLine);
+                    // pathPattern.remove()
+                    // map.pm.enableGlobalEditMode()
+                    markerLine.pm.toggleEdit()
+
+                    buildStyleSelector(pathPattern)
                 });
 
-                return pathPattern;
+                markerLine.on('pm:edit', function (e) {
+                    console.log('pm:edit', e);
+                    console.log('pathPattern==>', pathPattern);
+
+                    const coordinates = e.target.getLatLngs();
+
+                    markerLine.setLatLngs(coordinates);
+                    pathPattern.setPaths(markerLine)
+                });
+
+                return { pathPattern, markerLine };
             }
         }
 
