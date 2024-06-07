@@ -282,24 +282,41 @@
                 this.options.markerOptions.rotationAngle = directionPoint.heading + (this.options.angleCorrection || 0);
             }
 
-
+            console.log('-------------------');
+            console.log('latLngs', latLngs);
+            console.log('directionPoint', directionPoint);
 
             //detect the start and end marker and give them different icons/offsets
             const { lat, lng } = directionPoint.latLng;
             const start = latLngs[0];
             const end = latLngs[latLngs.length - 1];
-            const itemPlace = lat === end.lat && lng === end.lng
+
+            const itemPlace = lat.toFixed(6) === end.lat.toFixed(6) && lng.toFixed(6) === end.lng.toFixed(6)
                 ? 'end'
-                : lat === start.lat && lng === start.lng
+                : lat.toFixed(6) === start.lat.toFixed(6) && lng.toFixed(6) === start.lng.toFixed(6)
                     ? 'start'
                     : 'middle';
+            console.log('', itemPlace);
 
+
+            console.log('this.options.markerOptions.icon.options.iconSize', this.options.markerOptions.icon.options.iconSize);
+            const [height, width] = this.options.markerOptions.icon.options.iconSize
+
+            const iconAnchor =
+                itemPlace === 'start' ? [height / 2, width]
+                    ? itemPlace === 'end' : [height / 2, width]
+                    : [height / 2, width / 2]
 
             const options = {
                 ...this.options.markerOptions,
                 icon: L$1.icon({
                     ...this.options.markerOptions.icon.options,
-                    iconUrl: itemPlace === 'start' ? '/icons/Stop_sign.png' : this.options.markerOptions.icon.options.iconUrl,
+                    iconUrl:
+                        itemPlace === 'start' ? '/icons/Speed_Limit_50.png' :
+                            itemPlace === 'end' ? '/icons/Speed_Limit_50.png' :
+                                this.options.markerOptions.icon.options.iconUrl,
+
+                    iconAnchor: itemPlace === 'start' ? [height / 2, width] : itemPlace === 'end' ? [height / 2, 0 ] : [height / 2, width / 2]
                 })
             }
 
