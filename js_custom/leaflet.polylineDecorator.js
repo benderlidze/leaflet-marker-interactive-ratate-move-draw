@@ -277,10 +277,33 @@
         },
 
         buildSymbol: function buildSymbol(directionPoint, latLngs, map, index, total) {
+
             if (this.options.rotate) {
                 this.options.markerOptions.rotationAngle = directionPoint.heading + (this.options.angleCorrection || 0);
             }
-            return L$1.marker(directionPoint.latLng, this.options.markerOptions);
+
+
+
+            //detect the start and end marker and give them different icons/offsets
+            const { lat, lng } = directionPoint.latLng;
+            const start = latLngs[0];
+            const end = latLngs[latLngs.length - 1];
+            const itemPlace = lat === end.lat && lng === end.lng
+                ? 'end'
+                : lat === start.lat && lng === start.lng
+                    ? 'start'
+                    : 'middle';
+
+
+            const options = {
+                ...this.options.markerOptions,
+                icon: L$1.icon({
+                    ...this.options.markerOptions.icon.options,
+                    iconUrl: itemPlace === 'start' ? '/icons/Stop_sign.png' : this.options.markerOptions.icon.options.iconUrl,
+                })
+            }
+
+            return L$1.marker(directionPoint.latLng, options);
         }
     });
 

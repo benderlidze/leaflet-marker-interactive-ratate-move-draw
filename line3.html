@@ -295,17 +295,20 @@
                             icon: L.icon({
                                 iconSize: [height, width],
                                 iconUrl: path,
-                                iconAnchor: [height / 2, width],
+                                iconAnchor: [height / 2, width / 2],
                                 className: 'line-icon',
                             })
                         },
                     })
-                }]
+                },
+                ]
 
                 let pathPattern = L.polylineDecorator(
                     markerLine, {
                     patterns
                 }).addTo(map);
+
+                console.log('pathPattern', pathPattern);
 
                 markerLine.on('click', function (e) {
                     console.log('markerLine', markerLine);
