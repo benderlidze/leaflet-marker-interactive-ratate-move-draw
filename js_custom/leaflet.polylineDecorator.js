@@ -304,19 +304,19 @@
 
             const iconAnchor =
                 itemPlace === 'start' ? [height / 2, width]
-                    ? itemPlace === 'end' : [height / 2, width]
-                    : [height / 2, width / 2]
+                    : itemPlace === 'end' ? [height / 2, 0]
+                        : [height / 2, width / 2]
 
             const options = {
                 ...this.options.markerOptions,
                 icon: L$1.icon({
                     ...this.options.markerOptions.icon.options,
-                    iconUrl:
-                        itemPlace === 'start' ? '/icons/Speed_Limit_50.png' :
-                            itemPlace === 'end' ? '/icons/Speed_Limit_50.png' :
-                                this.options.markerOptions.icon.options.iconUrl,
+                    // iconUrl:
+                    //     itemPlace === 'start' ? '/icons/Speed_Limit_50.png' :
+                    //         itemPlace === 'end' ? '/icons/Speed_Limit_50.png' :
+                    //             this.options.markerOptions.icon.options.iconUrl,
 
-                    iconAnchor: itemPlace === 'start' ? [height / 2, width] : itemPlace === 'end' ? [height / 2, 0 ] : [height / 2, width / 2]
+                    iconAnchor: iconAnchor
                 })
             }
 
