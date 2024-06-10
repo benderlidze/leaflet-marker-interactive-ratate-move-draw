@@ -93,7 +93,7 @@
         // 3. projects offsets to segments
         var segmentIndex = 0;
         var segment = segments[0];
-        console.log('positionOffsets', positionOffsets);
+
         return positionOffsets.map(function (positionOffset) {
             // find the segment matching the offset,
             // starting from the previous one as offsets are ordered
@@ -282,10 +282,6 @@
                 this.options.markerOptions.rotationAngle = directionPoint.heading + (this.options.angleCorrection || 0);
             }
 
-            console.log('-------------------');
-            console.log('latLngs', latLngs);
-            console.log('directionPoint', directionPoint);
-
             //detect the start and end marker and give them different icons/offsets
             const { lat, lng } = directionPoint.latLng;
             const start = latLngs[0];
@@ -296,10 +292,7 @@
                 : lat.toFixed(6) === start.lat.toFixed(6) && lng.toFixed(6) === start.lng.toFixed(6)
                     ? 'start'
                     : 'middle';
-            console.log('', itemPlace);
 
-
-            console.log('this.options.markerOptions.icon.options.iconSize', this.options.markerOptions.icon.options.iconSize);
             const [height, width] = this.options.markerOptions.icon.options.iconSize
 
             const iconAnchor =
@@ -464,7 +457,6 @@
                 return [];
             }
 
-            console.log('latLngs', latLngs);
             var pathAsPoints = latLngs.map(function (latLng) {
                 return _this3._map.project(latLng);
             });
@@ -475,7 +467,6 @@
                     heading: point.heading
                 };
             })
-            console.log('prj', prj);
 
             return prj;
         },
