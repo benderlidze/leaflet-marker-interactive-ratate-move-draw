@@ -126,7 +126,6 @@
             map.on('pm:create', ({ layer }) => {
                 if (layer instanceof L.Polyline) {
                     const coordinates = layer.getLatLngs();
-
                     const line = drawIconLine({
                         coordinates,
                         onDelete: function () {
@@ -144,6 +143,7 @@
             function drawIconLine({ coordinates, onDelete, onChange }) {
 
                 const resizeVar = 0.05;
+                let iconProps = icons[0]
                 let { path, height, width } = icons[0];
 
                 let iconPath = path
@@ -185,6 +185,12 @@
                     patterns
                 }).addTo(map);
 
+                onChange({
+                    icon: iconProps,
+                    iconNumber,
+                    lineGeometry: coordinates
+                });
+
                 markerLine.on('click', function (e) {
                     markerLine.pm.toggleEdit()
                     buildStyleSelector(pathPattern)
@@ -196,7 +202,7 @@
                     pathPattern.setPaths(markerLine)
 
                     onChange({
-                        iconPath: iconPath,
+                        icon: iconProps,
                         iconNumber,
                         lineGeometry: coordinates
                     });
@@ -252,7 +258,6 @@
                     const deleteButton = document.createElement('button');
                     deleteButton.innerText = 'Delete';
                     deleteButton.addEventListener('click', function () {
-
                         markerLine.remove();
                         layer.remove();
                         styleSelector.innerHTML = '';
@@ -270,6 +275,7 @@
 
                 function updateLineProps({ layer, icon, iconNumber }) {
 
+                    iconProps = icon;
                     const resizeFactor = map.getZoom() * resizeVar;
                     console.log('map.getZoom()', map.getZoom());
 
@@ -300,9 +306,9 @@
                     ]);
 
                     onChange({
-                        iconPath: iconPath,
+                        icon: iconProps,
                         iconNumber,
-                        lineGeometry: markerLine.getLatLngs()
+                        lineGeometry: coordinates
                     });
                 }
 
