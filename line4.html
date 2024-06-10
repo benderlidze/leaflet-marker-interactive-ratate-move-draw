@@ -140,7 +140,18 @@
                 }
             });
 
-            function drawIconLine({ coordinates, onDelete, onChange }) {
+            drawIconLine({
+                initIconNumber: 7,
+                coordinates: [{ "lat": 48.85613168160397, "lng": 2.336633205413819 }, { "lat": 48.85291264706266, "lng": 2.336997985839844 }, { "lat": 48.85138776898278, "lng": 2.343242168426514 }, { "lat": 48.8477165757095, "lng": 2.3411607742309575 }],
+                onDelete: function () {
+                    console.log("Marker deleted",);
+                },
+                onChange: function (props) {
+                    console.log("Marker action", props);
+                },
+            });
+
+            function drawIconLine({ coordinates, initIconNumber = 2, onDelete, onChange }) {
 
                 const resizeVar = 0.05;
                 let iconProps = icons[0]
@@ -148,7 +159,7 @@
 
                 let iconPath = path
                 let nums = "100%"
-                let iconNumber = 2;
+                let iconNumber = initIconNumber;
 
                 const markerLine = L.polyline(coordinates, {}).addTo(map);
 
@@ -185,11 +196,17 @@
                     patterns
                 }).addTo(map);
 
-                onChange({
+                // onChange({
+                //     icon: iconProps,
+                //     iconNumber,
+                //     lineGeometry: coordinates
+                // });
+
+                updateLineProps({
+                    layer: pathPattern,
                     icon: iconProps,
-                    iconNumber,
-                    lineGeometry: coordinates
-                });
+                    iconNumber
+                })//redraw
 
                 markerLine.on('click', function (e) {
                     markerLine.pm.toggleEdit()
@@ -265,12 +282,9 @@
                         onDelete();
                     });
 
-
                     styleSelector.appendChild(container);
                     styleSelector.appendChild(container2);
                     styleSelector.appendChild(deleteButton);
-
-
                 }
 
                 function updateLineProps({ layer, icon, iconNumber }) {
