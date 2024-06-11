@@ -29,9 +29,9 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
             markerOptions: {
                 pmIgnore: true,
                 icon: L.icon({
-                    iconSize: [_height, _width],
+                    iconSize: [_width, _height],
                     iconUrl: path,
-                    iconAnchor: [_height / 2, _width / 2],
+                    iconAnchor: [_width / 2, _height / 2],
                     className: 'line-icon',
                 })
             },
@@ -156,9 +156,9 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
                     angleCorrection: 0,
                     markerOptions: {
                         icon: L.icon({
-                            iconSize: [_height, _width],
+                            iconSize: [_width, _height],
                             iconUrl: iconPath,
-                            iconAnchor: [_height / 2, _width / 2],
+                            iconAnchor: [_width / 2, _height / 2],
                             className: 'line-icon',
                         })
                     },
@@ -187,9 +187,9 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
                     angleCorrection: 0,
                     markerOptions: {
                         icon: L.icon({
-                            iconSize: [_height, _width],
+                            iconSize: [_width, _height],
                             iconUrl: iconPath,
-                            iconAnchor: [_height / 2, _width / 2],
+                            iconAnchor: [_width / 2, _height / 2],
                             className: 'line-icon',
                         })
                     },
