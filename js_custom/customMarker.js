@@ -316,7 +316,7 @@ L.customMarker = function (latlng, options) {
                         const img = document.createElement('img');
                         img.src = iconItem.path;
                         img.style = `width: ${_width}px; height: ${_height}px;`;
-                        img.className = "marker-icon";
+                        img.className = "custom-marker-icon";
 
                         wrapper.appendChild(img);
 
