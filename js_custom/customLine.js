@@ -1,4 +1,4 @@
-function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDelete, onChange }) {
+function drawIconLine({ lineId, coordinates, icon = icons[0], initIconNumbers = 2, onDelete, onChange }) {
 
     const resizeVar = 0.05;
     let iconProps = icon
@@ -90,6 +90,7 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
         markerLine.setLatLngs(coordinates);
         pathPattern.setPaths(markerLine)
         onChange({
+            lineId,
             actionName: 'editLine',
             icon: iconProps,
             iconNumber,
@@ -209,6 +210,7 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
         ]);
 
         onChange({
+            lineId,
             actionName: 'iconsChange',
             icon: iconProps,
             iconNumber,

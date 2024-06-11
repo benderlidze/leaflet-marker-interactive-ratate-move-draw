@@ -170,6 +170,9 @@
             if (layer instanceof L.Polyline) {
                 const coordinates = layer.getLatLngs();
                 const line = drawIconLine({
+                    lineId: generate_uuidv4(),
+                    icon: icons[0],
+                    initIconNumbers: 2,
                     coordinates,
                     onDelete: function () {
                         console.log("Marker deleted",);
@@ -182,9 +185,6 @@
                 layer.remove();
             }
         });
-
-
-
 
         const target = document.getElementById("map")
         target.ondragover = function (e) {
@@ -251,6 +251,7 @@
         }).addTo(map);
 
         drawIconLine({
+            lineId: generate_uuidv4(),
             icon: icons[1],
             initIconNumbers: 7,
             coordinates: [{ "lat": 52.14402378018403, "lng": 5.532989501953126 }, { "lat": 52.07612995654167, "lng": 5.5666351318359375 }, { "lat": 52.0588237066606, "lng": 5.672378540039063 }, { "lat": 52.01193653675363, "lng": 5.784988403320313 }, { "lat": 51.96288477548511, "lng": 5.771255493164063 }],
