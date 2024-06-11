@@ -7,8 +7,9 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
     let iconPath = path
     let nums = "100%"
     let iconNumber = initIconNumbers;
+    let editMode = false;
 
-    const markerLine = L.polyline(coordinates, {}).addTo(map);
+    const markerLine = L.polyline(coordinates).addTo(map);
 
     markerLine.options.pmIgnore = true;
     L.PM.reInitLayer(markerLine);
@@ -55,22 +56,45 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
         iconNumber
     })//redraw
 
-    markerLine.on('click', function (e) {
-        markerLine.pm.toggleEdit()
-        buildStyleSelector(pathPattern)
-    });
+    map.on('click', disableEditMode);
+    pathPattern.on('click', enableEditMode);
+    markerLine.on('click', enableEditMode);
+    markerLine.on('pm:edit', editLine);
 
-    markerLine.on('pm:edit', function (e) {
-        const coordinates = e.target.getLatLngs();
+    // document.addEventListener('click', function (e) {
+    //     console.log('DIV CLICK', e);
+    //     if (e.target.closest('div.leaflet-marker-icon.marker-icon.leaflet-zoom-animated.leaflet-interactive')) {
+    //         return;
+    //     }
+    //     markerLine.pm.disable()
+    // });
+
+    function disableEditMode() {
+        if (editMode) {
+            markerLine.pm.disable()
+            editMode = false;
+        }
+    }
+    function editLine(event) {
+        const coordinates = event.target.getLatLngs();
         markerLine.setLatLngs(coordinates);
         pathPattern.setPaths(markerLine)
-
         onChange({
             icon: iconProps,
             iconNumber,
             lineGeometry: coordinates
         });
-    });
+    }
+
+    function enableEditMode(event) {
+        setTimeout(() => {
+            editMode = true; // to disable on map click event
+        }, 100);
+        markerLine.pm.enable()
+        buildStyleSelector(pathPattern)
+        event.originalEvent.stopPropagation();
+        event.originalEvent.preventDefault();
+    }
 
     function buildStyleSelector(layer) {
         const styleSelector = document.getElementById('style-selector');
@@ -125,6 +149,11 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
             markerLine.remove();
             layer.remove();
             styleSelector.innerHTML = '';
+
+            map.off('click', disableEditMode);
+            pathPattern.off('click', enableEditMode);
+            markerLine.off('click', enableEditMode);
+            markerLine.off('pm:edit', editLine);
 
             onDelete();
         });
