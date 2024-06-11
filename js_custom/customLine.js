@@ -60,6 +60,8 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
     pathPattern.on('click', enableEditMode);
     markerLine.on('click', enableEditMode);
     markerLine.on('pm:edit', editLine);
+    markerLine.on('pm:markerdragstart', hideIcons)
+    markerLine.on('pm:markerdragend', showIcons);
 
     // document.addEventListener('click', function (e) {
     //     console.log('DIV CLICK', e);
@@ -69,17 +71,26 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
     //     markerLine.pm.disable()
     // });
 
+    function showIcons() {
+        pathPattern.addTo(map)
+    }
+    function hideIcons() {
+        pathPattern.remove()
+    }
     function disableEditMode() {
         if (editMode) {
             markerLine.pm.disable()
             editMode = false;
         }
     }
+
     function editLine(event) {
+        console.log('edit',);
         const coordinates = event.target.getLatLngs();
         markerLine.setLatLngs(coordinates);
         pathPattern.setPaths(markerLine)
         onChange({
+            actionName: 'editLine',
             icon: iconProps,
             iconNumber,
             lineGeometry: coordinates
@@ -154,6 +165,8 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
             pathPattern.off('click', enableEditMode);
             markerLine.off('click', enableEditMode);
             markerLine.off('pm:edit', editLine);
+            markerLine.off('pm:markerdragstart', hideIcons)
+            markerLine.off('pm:markerdragend', showIcons);
 
             onDelete();
         });
@@ -196,6 +209,7 @@ function drawIconLine({ coordinates, icon = icons[0], initIconNumbers = 2, onDel
         ]);
 
         onChange({
+            actionName: 'iconsChange',
             icon: iconProps,
             iconNumber,
             lineGeometry: coordinates
