@@ -29,7 +29,7 @@ L.customMarker = function (latlng, options) {
         markerId: options.markerId,
         actionName: "",
         position: latlng,
-        rotationAngle: 0,
+        rotationAngle: options.rotationAngle,
         icons: [],
         line: null,
         pointPosition: latlng
@@ -58,6 +58,7 @@ L.customMarker = function (latlng, options) {
     }
 
     const CustomMarker = L.Marker.extend({
+
         options: {
             rotationOrigin: 'center bottom',
             rotationAngle: 0,
@@ -83,8 +84,6 @@ L.customMarker = function (latlng, options) {
             if (this.options.pointPosition) {
                 lat1 = this.options.pointPosition.lat;
                 lng1 = this.options.pointPosition.lng;
-
-                console.log('!!!!!!!!!!!!!!!!!!!!!!!',);
                 markerProps.pointPosition = { lat: lat1, lng: lng1 };
             }
 
