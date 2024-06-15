@@ -32,7 +32,7 @@ L.customMarker = function (latlng, options) {
         rotationAngle: options.rotationAngle,
         icons: [],
         line: null,
-        pointPosition: latlng
+        pointPosition: options.pointPosition
     }
 
     function bearing(from, to) {
@@ -53,10 +53,6 @@ L.customMarker = function (latlng, options) {
         return bearing + 180;
     }
 
-    function degreesToRadians(degrees) {
-        return degrees * Math.PI / 180;
-    }
-
     const CustomMarker = L.Marker.extend({
 
         options: {
@@ -74,7 +70,7 @@ L.customMarker = function (latlng, options) {
 
         onAdd: function (map) {
 
-            console.log('On ADD!!!!', this.options);
+            console.log('On ADD!!!!');
             L.Marker.prototype.onAdd.call(this, map);
 
             let { lat, lng } = this.getLatLng();
