@@ -32,7 +32,7 @@ L.customMarker = function (latlng, options) {
         rotationAngle: options.rotationAngle,
         icons: [],
         line: null,
-        pointPosition: options.pointPosition
+        pointPosition: options.pointPosition || latlng
     }
 
     function bearing(from, to) {
