@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leaflet easyPrint plugin Demo</title>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+    <link href='https://fonts.googleapis.com/css?family=Lato:900,300' rel='stylesheet' type='text/css'>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <style>
+        html {
+            background: #222222;
+            padding: 40px 200px;
+            font-family: 'Lato', sans-serif;
+        }
+
+        h2,
+        p {
+            color: white;
+        }
+
+        .gitButton {
+            padding: 15px 30px;
+            background-color: #47a230;
+            text-decoration: none;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            transition: background-color .5s;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .gitButton:hover {
+            background-color: #1d7806
+        }
+
+        .gitButton:visited {
+            color: white;
+        }
+
+        .manualButton {
+            padding: 15px 30px;
+            background-color: #308ba2;
+            margin-left: 40px;
+            text-decoration: none;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            transition: background-color .5s;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .easyPrintHolder.a3CssClass {
+            background-image: url(data:image/svg+xml;utf8;base64,PD9...go=);
+        }
+    </style>
+
+
+</head>
+
+<body class="easyPrint">
+    <h2>Welcome to the Leaflet easyPrint demo</h2>
+    <p>All this text will be hidden when I print my map.</p>
+    <div id="map" style="height:400px; width:900px"></div>
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+
+    <script src="https://rowanwins.github.io/leaflet-easyPrint/dist/bundle.js"></script>
+
+    <script>
+
+        const map = L.map('map').setView({ lat: 51.97726758181177, lng: 5.661392211914063 }, 11);
+
+        const tiles = L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'Kaartgegevens &copy; <a href="https://www.kadaster.nl">Kadaster</a>'
+        }).addTo(map);
+
+
+
+        const mapSizeOption = { width: 1500, height: 1000, className: 'a3CssClass', tooltip: 'Export map' }
+        const printer = L.easyPrint({ tileLayer: tiles, tileWait: 500, sizeModes: [mapSizeOption], filename: 'myMap', exportOnly: true, hideControlContainer: true }).addTo(map);
+        function manualPrint() {
+            printer.printMap('a3CssClass', 'MyManualPrint')
+        }
+
+    </script>
+    <p class="testing">So will this boring sentence.</p>
+    <br><br>
+    <button class="manualButton" onclick="manualPrint()">Manual print</button>
+
+</body>
+
+</html>

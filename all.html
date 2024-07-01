@@ -20,6 +20,9 @@
     <script src="js_custom/customMarker.js"></script>
     <script src="js_custom/customLine.js"></script>
 
+    <script src="js_custom/leaflet-easyPrint.js"></script>
+
+
     <style>
         html,
         body {
@@ -101,6 +104,10 @@
         .line-icon {
             z-index: 10 !important;
         }
+
+        .a3CssClass{
+            background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KDTwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+Cjxzdmcgd2lkdGg9IjgwMHB4IiBoZWlnaHQ9IjgwMHB4IiB2aWV3Qm94PSItNCAwIDM0IDM0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+DQogICAgICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEpIj4NCiAgICAgICAgICAgIDxyZWN0IHN0cm9rZT0iIzQ3NDc0NyIgc3Ryb2tlLXdpZHRoPSIyIiB5PSIxIiB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHJ4PSIxIi8+DQogICAgICAgICAgICA8ZyBmaWxsPSIjNTc1NzU3Ij4NCiAgICAgICAgICAgICAgICA8Zz4NCiAgICAgICAgICAgICAgICAgICAgPHBhdGggaWQ9IlJlY3RhbmdsZS0zMDIiIGQ9Ik0xNSAxNWg0djFoLTR6Ii8+DQogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0xOCAxNWgxdjZoLTF6Ii8+DQogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik05IDE5aDF2M0g5eiIvPg0KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNOSAyMWgxMHYxSDl6Ii8+DQogICAgICAgICAgICAgICAgPC9nPg0KICAgICAgICAgICAgICAgIDxnPg0KICAgICAgICAgICAgICAgICAgICA8cGF0aCBkPSJNNSAxMmgxMHYxSDV6Ii8+DQogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik01IDE4aDEwdjFINXoiLz4NCiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTUgMTJoMXY3SDV6Ii8+DQogICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0xNCAxMmgxdjdoLTF6Ii8+DQogICAgICAgICAgICAgICAgPC9nPg0KICAgICAgICAgICAgPC9nPg0KICAgICAgICA8L2c+DQogICAgPC9nPg0KPC9zdmc+);
+        }
     </style>
 </head>
 
@@ -143,10 +150,18 @@
 
         const map = L.map('map').setView({ lat: 51.97726758181177, lng: 5.661392211914063 }, 11);
 
-        L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png', {
+        const tiles = L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: 'Kaartgegevens &copy; <a href="https://www.kadaster.nl">Kadaster</a>'
         }).addTo(map);
+
+        const mapSizeOption = { width: 2000, height: 2000, className: 'a3CssClass', tooltip: 'Export map' }
+        const printer = L.easyPrint({ tileLayer: tiles, tileWait: 1500, sizeModes: [mapSizeOption], filename: 'myMap', exportOnly: true, hideControlContainer: true }).addTo(map);
+        function manualPrint() {
+            printer.printMap('a3CssClass', 'MyManualPrint')
+        }
+
+
 
         // add leaflet.pm controls to the map
         map.pm.addControls({
