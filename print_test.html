@@ -1,100 +1,78 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>Leaflet easyPrint plugin Demo</title>
-    <meta charset="utf-8" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
-    <link href='https://fonts.googleapis.com/css?family=Lato:900,300' rel='stylesheet' type='text/css'>
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
-
+    <title>Leaflet Screenshot</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
     <style>
-        html {
-            background: #222222;
-            padding: 40px 200px;
-            font-family: 'Lato', sans-serif;
+        #map {
+            width: 600px;
+            height: 400px;
         }
-
-        h2,
-        p {
-            color: white;
-        }
-
-        .gitButton {
-            padding: 15px 30px;
-            background-color: #47a230;
-            text-decoration: none;
-            font-weight: 900;
-            color: white;
-            text-transform: uppercase;
-            transition: background-color .5s;
-            border: none;
-            border-radius: 2px;
-            cursor: pointer;
-        }
-
-        .gitButton:hover {
-            background-color: #1d7806
-        }
-
-        .gitButton:visited {
-            color: white;
-        }
-
-        .manualButton {
-            padding: 15px 30px;
-            background-color: #308ba2;
-            margin-left: 40px;
-            text-decoration: none;
-            font-weight: 900;
-            color: white;
-            text-transform: uppercase;
-            transition: background-color .5s;
-            border: none;
-            border-radius: 2px;
-            cursor: pointer;
-        }
-
-        .easyPrintHolder.a3CssClass {
-            background-image: url(data:image/svg+xml;utf8;base64,PD9...go=);
+        #hidden-map {
+            width: 2000px;
+            height: 2000px;
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
         }
     </style>
-
-
 </head>
-
-<body class="easyPrint">
-    <h2>Welcome to the Leaflet easyPrint demo</h2>
-    <p>All this text will be hidden when I print my map.</p>
-    <div id="map" style="height:400px; width:900px"></div>
-    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
-
-    <script src="https://rowanwins.github.io/leaflet-easyPrint/dist/bundle.js"></script>
+<body>
+    <div id="map"></div>
+    <button id="test">Take Screenshot</button>
+    <div id="hidden-map"></div>
 
     <script>
+        var map = L.map('map').setView([51.505, -0.09], 13);
 
-        const map = L.map('map').setView({ lat: 51.97726758181177, lng: 5.661392211914063 }, 11);
-
-        const tiles = L.tileLayer('https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: 'Kaartgegevens &copy; <a href="https://www.kadaster.nl">Kadaster</a>'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
         }).addTo(map);
 
+        document.getElementById("test").addEventListener("click", function () {
+            // Create a hidden map container
+            var hiddenMapContainer = document.getElementById('hidden-map');
 
+            // Clone the original map node to the hidden map container
+            var node = map.getContainer().cloneNode(true);
+            hiddenMapContainer.appendChild(node);
 
-        const mapSizeOption = { width: 1500, height: 1000, className: 'a3CssClass', tooltip: 'Export map' }
-        const printer = L.easyPrint({ tileLayer: tiles, tileWait: 500, sizeModes: [mapSizeOption], filename: 'myMap', exportOnly: true, hideControlContainer: true }).addTo(map);
-        function manualPrint() {
-            printer.printMap('a3CssClass', 'MyManualPrint')
-        }
+            // Copy styles from the original map container to the hidden one
+            var computedStyle = window.getComputedStyle(map.getContainer());
+            for (var key of computedStyle) {
+                node.style[key] = computedStyle[key];
+            }
 
+            // Initialize a hidden Leaflet map
+            var hiddenMap = L.map(node, {
+                center: map.getCenter(),
+                zoom: map.getZoom(),
+                layers: [L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })],
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            hiddenMap.setView(map.getCenter(), map.getZoom());
+
+            hiddenMap.whenReady(function () {
+                domtoimage.toPng(hiddenMapContainer, {
+                    width: 2000,
+                    height: 2000
+                })
+                .then(function (dataUrl) {
+                    var img = new Image();
+                    img.src = dataUrl;
+                    document.body.appendChild(img);
+                    hiddenMap.remove(); // Clean up the hidden map
+                    hiddenMapContainer.innerHTML = ''; // Clear the hidden map container
+                })
+                .catch(function (error) {
+                    console.error('oops, something went wrong!', error);
+                });
+            });
+        });
     </script>
-    <p class="testing">So will this boring sentence.</p>
-    <br><br>
-    <button class="manualButton" onclick="manualPrint()">Manual print</button>
-
 </body>
-
 </html>
